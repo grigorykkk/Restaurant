@@ -1,0 +1,85 @@
+@page "/RestaurantPage"
+
+<div class="container">
+    <h1 class="restaurant-title">@RestaurantName</h1>
+    
+    <nav class="navigation">
+        @foreach (var item in NavigationItems)
+        {
+            <a href="@item.Url" 
+               class="nav-item @(GetActiveClass(item))"
+               @onclick="() => NavigateToSection(item)"
+               @onclick:preventDefault="true">
+                @item.Title
+            </a>
+        }
+    </nav>
+
+    @if (SelectedSection != null)
+    {
+        <div class="content-section">
+            <div class="section-card">
+                <h2 class="section-title">@SelectedSection.Title</h2>
+                <div class="section-content">
+                    @switch (SelectedSection.Id)
+                    {
+                        case "address":
+                            <AddressSection />
+                            break;
+                        case "booking":
+                            <BookingSection />
+                            break;
+                        case "menu":
+                            <MenuSection />
+                            break;
+                        case "delivery":
+                            <DeliverySection />
+                            break;
+                        case "contacts":
+                            <ContactsSection />
+                            break;
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string RestaurantName = "Restaurant";
+    private NavigationItem? SelectedSection = null;
+
+    private class NavigationItem
+    {
+        public string Id { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string Url { get; set; } = "";
+        public bool IsActive { get; set; }
+    }
+
+    private List<NavigationItem> NavigationItems = new List<NavigationItem>
+    {
+        new NavigationItem { Id = "address", Title = "Adress", Url = "#address" },
+        new NavigationItem { Id = "booking", Title = "Booking", Url = "#booking" },
+        new NavigationItem { Id = "menu", Title = "Menu", Url = "#menu" },
+        new NavigationItem { Id = "delivery", Title = "Delivery", Url = "#delivery" },
+        new NavigationItem { Id = "contacts", Title = "Contacts", Url = "#contacts" }
+    };
+
+    private void NavigateToSection(NavigationItem item)
+    {
+        // Сбросить активность всех элементов
+        NavigationItems.ForEach(x => x.IsActive = false);
+        
+        // Установить активность для выбранного элемента
+        item.IsActive = true;
+        SelectedSection = item;
+        
+        StateHasChanged();
+    }
+
+    private string GetActiveClass(NavigationItem item)
+    {
+        return item.IsActive ? "active" : "";
+    }
+}

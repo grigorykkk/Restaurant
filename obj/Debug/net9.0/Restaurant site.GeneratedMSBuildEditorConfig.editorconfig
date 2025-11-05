@@ -24,12 +24,8 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/Error.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9FcnJvci5yYXpvcg==
-build_metadata.AdditionalFiles.CssScope = 
-
-[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/Home.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Ib21lLnJhem9y
+[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/RestaurantPage.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9SZXN0YXVyYW50UGFnZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/grigory/RiderProjects/Restaurant site/Components/Routes.razor]
