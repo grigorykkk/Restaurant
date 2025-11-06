@@ -24,6 +24,26 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/AddressSection.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BZGRyZXNzU2VjdGlvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/BookingSection.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Cb29raW5nU2VjdGlvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/ContactsSection.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Db250YWN0c1NlY3Rpb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/DeliverySection.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9EZWxpdmVyeVNlY3Rpb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/MenuSection.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9NZW51U2VjdGlvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/grigory/RiderProjects/Restaurant site/Components/Pages/RestaurantPage.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9SZXN0YXVyYW50UGFnZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
