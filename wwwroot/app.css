@@ -108,13 +108,15 @@ body {
 /* Навигация */
 .navigation {
     display: flex;
-    background-color: #b8b8b8;
+    background-color: rgba(184, 184, 184, 0.7);
     border-radius: 35px;
     padding: 8px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     gap: 5px;
     flex-wrap: nowrap;
     justify-content: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .nav-item {
