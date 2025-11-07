@@ -49,6 +49,37 @@ body {
     transform: translateY(0);
 }
 
+/* Угловые ссылки (адрес и телефон) */
+.corner-link {
+    position: fixed;
+    bottom: 20px;
+    padding: 12px 24px;
+    background-color: transparent;
+    color: #1a1a1a;
+    text-decoration: none;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.corner-link-left {
+    left: 20px;
+}
+
+.corner-link-right {
+    right: 20px;
+}
+
+.corner-link:hover {
+    transform: translateY(-2px);
+}
+
+.corner-link:active {
+    transform: translateY(0);
+}
+
 /* Заголовок ресторана */
 .restaurant-title {
     font-size: 72px;
@@ -69,7 +100,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px;
+    gap: 40px;
     z-index: 1000;
     max-width: calc(100vw - 40px);
 }
@@ -166,7 +197,7 @@ body {
 .section-card {
     background-color: #f5f5f5;
     border-radius: 20px;
-    padding: 40px;
+    padding: 30px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
@@ -277,10 +308,12 @@ body {
 
 .error-message {
     margin-top: 15px;
-    padding: 15px;
-    background-color: #ffe5e5;
+    padding: 20px;
+    background-color: white;
+    border: 2px solid #ffcdd2;
     border-radius: 10px;
     text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .error-message p {
@@ -299,6 +332,10 @@ body {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    background-color: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .form-group {
@@ -359,9 +396,10 @@ body {
 
 .success-message {
     text-align: center;
-    padding: 40px;
-    background-color: #f0f8ff;
+    padding: 30px;
+    background-color: white;
     border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     animation: fadeIn 0.5s ease;
 }
 
@@ -654,6 +692,109 @@ body {
     color: #666;
 }
 
+/* Модальное окно */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: #f5f5f5;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 36px;
+    color: #666;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    line-height: 1;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    color: #1a1a1a;
+}
+
+.modal-title {
+    font-size: 32px;
+    font-weight: 400;
+    color: #1a1a1a;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.modal-info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.modal-info-item {
+    background-color: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.modal-info-item strong {
+    display: block;
+    margin-bottom: 10px;
+    color: #333;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.modal-info-item p {
+    color: #666;
+    margin-bottom: 5px;
+    font-size: 16px;
+}
+
+.modal-info-item p:last-child {
+    margin-bottom: 0;
+}
+
 /* Адаптивность */
 @media (max-width: 1024px) {
     .nav-item {
@@ -679,9 +820,23 @@ body {
         font-size: 14px;
     }
 
+    .corner-link {
+        bottom: 15px;
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
+    .corner-link-left {
+        left: 15px;
+    }
+
+    .corner-link-right {
+        right: 15px;
+    }
+
     .navigation-container {
         bottom: 15px;
-        gap: 15px;
+        gap: 30px;
     }
 
     .navigation {
@@ -722,6 +877,14 @@ body {
     .contacts-grid {
         grid-template-columns: 1fr;
     }
+
+    .modal-content {
+        padding: 30px;
+    }
+
+    .modal-title {
+        font-size: 28px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -735,7 +898,7 @@ body {
 
     .navigation-container {
         bottom: 10px;
-        gap: 10px;
+        gap: 20px;
     }
 
     .navigation {
@@ -764,11 +927,23 @@ body {
         font-size: 16px;
         padding: 12px 24px;
     }
+
+    .modal-content {
+        padding: 25px;
+    }
+
+    .modal-title {
+        font-size: 24px;
+    }
+
+    .modal-close {
+        font-size: 30px;
+    }
 }
 
 @media (max-width: 380px) {
     .navigation-container {
-        gap: 5px;
+        gap: 15px;
     }
 
     .navigation {

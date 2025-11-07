@@ -32,16 +32,12 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTmF2aWdhdGlvbi5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/Address.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BZGRyZXNzLnJhem9y
-build_metadata.AdditionalFiles.CssScope = 
-
 [/Users/grigory/RiderProjects/Restaurant site/Components/Pages/Booking.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Cb29raW5nLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/Contacts.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Db250YWN0cy5yYXpvcg==
+[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/ContactInfo.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Db250YWN0SW5mby5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/grigory/RiderProjects/Restaurant site/Components/Pages/Delivery.razor]

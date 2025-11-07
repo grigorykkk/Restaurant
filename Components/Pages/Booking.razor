@@ -1,16 +1,15 @@
 @page "/booking"
 @rendermode InteractiveServer
 
+<HomeButton />
+
 <div class="container">
     <h1 class="restaurant-title">Restaurant</h1>
 
-    <Navigation />
-
     <div class="content-section">
-        <div class="section-card">
-            <h2 class="section-title">Booking</h2>
-            <div class="section-content">
-                <div class="booking-container">
+        <h2 class="section-title">Booking</h2>
+        <div class="section-content">
+            <div class="booking-container">
                     <!-- Отладочная информация -->
                     <p style="text-align: center; color: #999; font-size: 12px; margin-bottom: 10px;">
                         Активная вкладка: @activeTab | Переключений: @switchCount
@@ -133,8 +132,11 @@
                     }
                 </div>
             </div>
-        </div>
     </div>
+</div>
+
+<div class="navigation-container">
+    <Navigation />
 </div>
 
 @code {

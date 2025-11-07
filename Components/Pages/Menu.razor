@@ -2,10 +2,10 @@
 @rendermode InteractiveServer
 @inject HttpClient Http
 
+<HomeButton />
+
 <div class="container">
     <h1 class="restaurant-title">Restaurant</h1>
-
-    <Navigation />
 
     <div class="content-section">
         <div class="section-card">
@@ -67,6 +67,10 @@
             </div>
         </div>
     </div>
+</div>
+
+<div class="navigation-container">
+    <Navigation />
 </div>
 
 @code {
