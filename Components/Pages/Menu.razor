@@ -1,0 +1,127 @@
+@page "/menu"
+@rendermode InteractiveServer
+@inject HttpClient Http
+
+<div class="container">
+    <h1 class="restaurant-title">Restaurant</h1>
+
+    <Navigation />
+
+    <div class="content-section">
+        <div class="section-card">
+            <h2 class="section-title">Menu</h2>
+            <div class="section-content">
+                <div class="menu-container">
+                    <div class="menu-filters">
+                        <button class="filter-button @(selectedCategory == "all" ? "active" : "")"
+                                @onclick='() => FilterMenu("all")'>
+                            Все
+                        </button>
+                        <button class="filter-button @(selectedCategory == "appetizers" ? "active" : "")"
+                                @onclick='() => FilterMenu("appetizers")'>
+                            Закуски
+                        </button>
+                        <button class="filter-button @(selectedCategory == "main" ? "active" : "")"
+                                @onclick='() => FilterMenu("main")'>
+                            Основное
+                        </button>
+                        <button class="filter-button @(selectedCategory == "desserts" ? "active" : "")"
+                                @onclick='() => FilterMenu("desserts")'>
+                            Десерты
+                        </button>
+                        <button class="filter-button @(selectedCategory == "drinks" ? "active" : "")"
+                                @onclick='() => FilterMenu("drinks")'>
+                            Напитки
+                        </button>
+                    </div>
+
+                    @if (isLoading)
+                    {
+                        <div class="loading-message">
+                            <p>Загрузка меню...</p>
+                        </div>
+                    }
+                    else if (errorMessage != null)
+                    {
+                        <div class="error-message">
+                            <p>@errorMessage</p>
+                            <button class="submit-button" @onclick="LoadMenuFromApi">Повторить попытку</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="menu-items">
+                            @foreach (var item in GetFilteredMenu())
+                            {
+                                <div class="menu-item">
+                                    <div class="menu-item-header">
+                                        <h3>@item.Name</h3>
+                                        <span class="menu-price">@item.Price ₽</span>
+                                    </div>
+                                    <p class="menu-description">@item.Description</p>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string selectedCategory = "all";
+    private bool isLoading = false;
+    private string? errorMessage = null;
+    private List<MenuItem> menuItems = new List<MenuItem>();
+
+    private class MenuItem
+    {
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string Category { get; set; } = "";
+        public decimal Price { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMenuFromApi();
+    }
+
+    private async Task LoadMenuFromApi()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var items = await Http.GetFromJsonAsync<List<MenuItem>>("https://your-api-url.com/api/menu");
+
+            if (items != null)
+            {
+                menuItems = items;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Ошибка загрузки меню: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void FilterMenu(string category)
+    {
+        selectedCategory = category;
+    }
+
+    private List<MenuItem> GetFilteredMenu()
+    {
+        if (selectedCategory == "all")
+            return menuItems;
+
+        return menuItems.Where(item => item.Category == selectedCategory).ToList();
+    }
+}

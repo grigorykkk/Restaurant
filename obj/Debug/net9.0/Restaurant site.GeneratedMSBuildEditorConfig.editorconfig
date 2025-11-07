@@ -24,24 +24,32 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/AddressSection.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BZGRyZXNzU2VjdGlvbi5yYXpvcg==
+[/Users/grigory/RiderProjects/Restaurant site/Components/Layout/HomeButton.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvSG9tZUJ1dHRvbi5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/BookingSection.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Cb29raW5nU2VjdGlvbi5yYXpvcg==
+[/Users/grigory/RiderProjects/Restaurant site/Components/Layout/Navigation.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTmF2aWdhdGlvbi5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/ContactsSection.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Db250YWN0c1NlY3Rpb24ucmF6b3I=
+[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/Address.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BZGRyZXNzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/DeliverySection.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9EZWxpdmVyeVNlY3Rpb24ucmF6b3I=
+[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/Booking.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Cb29raW5nLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/MenuSection.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9NZW51U2VjdGlvbi5yYXpvcg==
+[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/Contacts.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Db250YWN0cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/Delivery.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9EZWxpdmVyeS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/grigory/RiderProjects/Restaurant site/Components/Pages/Menu.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9NZW51LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/grigory/RiderProjects/Restaurant site/Components/Pages/RestaurantPage.razor]

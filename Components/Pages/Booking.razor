@@ -1,0 +1,246 @@
+@page "/booking"
+@rendermode InteractiveServer
+
+<div class="container">
+    <h1 class="restaurant-title">Restaurant</h1>
+
+    <Navigation />
+
+    <div class="content-section">
+        <div class="section-card">
+            <h2 class="section-title">Booking</h2>
+            <div class="section-content">
+                <div class="booking-container">
+                    <!-- Отладочная информация -->
+                    <p style="text-align: center; color: #999; font-size: 12px; margin-bottom: 10px;">
+                        Активная вкладка: @activeTab | Переключений: @switchCount
+                    </p>
+
+                    <!-- Переключатель между окнами -->
+                    <div class="booking-tabs">
+                        <button type="button" class="tab-button @(activeTab == "create" ? "active" : "")"
+                                @onclick="SwitchToCreate">
+                            Забронировать столик
+                        </button>
+                        <button type="button" class="tab-button @(activeTab == "check" ? "active" : "")"
+                                @onclick="SwitchToCheck">
+                            Проверить бронь
+                        </button>
+                    </div>
+
+                    <!-- Окно 1: Забронировать столик -->
+                    @if (activeTab == "create")
+                    {
+                        <div class="tab-content">
+                            @if (!isBooked)
+                            {
+                                <form class="booking-form" @onsubmit="HandleBooking" @onsubmit:preventDefault="true">
+                                    <div class="form-group">
+                                        <label for="name">Ваше имя</label>
+                                        <input type="text" id="name" @bind="bookingData.Name" required />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="phone">Телефон</label>
+                                        <input type="tel" id="phone" @bind="bookingData.Phone"
+                                               placeholder="+7 (___) ___-__-__" required />
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="date">Дата</label>
+                                            <input type="date" id="date" @bind="bookingData.Date" required />
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="time">Время</label>
+                                            <input type="time" id="time" @bind="bookingData.Time" required />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="guests">Количество гостей</label>
+                                        <select id="guests" @bind="bookingData.Guests" required>
+                                            <option value="">Выберите...</option>
+                                            <option value="1">1 гость</option>
+                                            <option value="2">2 гостя</option>
+                                            <option value="3">3 гостя</option>
+                                            <option value="4">4 гостя</option>
+                                            <option value="5">5 гостей</option>
+                                            <option value="6">6+ гостей</option>
+                                        </select>
+                                    </div>
+
+                                    <button type="submit" class="submit-button">Забронировать столик</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <div class="success-message">
+                                    <h3>Бронирование подтверждено!</h3>
+                                    <p>Имя: @bookingData.Name</p>
+                                    <p>Телефон: @bookingData.Phone</p>
+                                    <p>Дата: @bookingData.Date.ToString("dd.MM.yyyy")</p>
+                                    <p>Время: @bookingData.Time.ToString("HH:mm")</p>
+                                    <p>Количество гостей: @bookingData.Guests</p>
+                                    <p class="booking-code">Код брони: последние 4 цифры вашего телефона</p>
+                                    <p>Мы ждем вас! В случае изменений, пожалуйста, позвоните нам.</p>
+                                    <button class="submit-button" @onclick="ResetBooking">Создать новую бронь</button>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <!-- Окно 2: Проверить бронь -->
+                    @if (activeTab == "check")
+                    {
+                        <div class="tab-content">
+                            @if (!bookingFound)
+                            {
+                                <div class="booking-form">
+                                    <div class="form-group">
+                                        <label for="checkPhone">Последние 4 цифры телефона</label>
+                                        <input type="text" id="checkPhone" @bind-value="phoneCheck" @bind-value:event="oninput"
+                                               placeholder="____" maxlength="4" />
+                                    </div>
+
+                                    <button type="button" class="submit-button" @onclick="CheckBooking">Проверить бронь</button>
+
+                                    <p style="margin-top: 10px; color: #999; font-size: 14px;">Всего броней: @bookings.Count</p>
+                                </div>
+
+                                @if (showNotFound)
+                                {
+                                    <div class="error-message">
+                                        <p>Бронь не найдена. Проверьте правильность введенных данных.</p>
+                                        <p style="font-size: 12px;">Вы ввели: "@phoneCheck"</p>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="success-message">
+                                    <h3>Информация о брони</h3>
+                                    <p>Имя: @foundBooking.Name</p>
+                                    <p>Телефон: @foundBooking.Phone</p>
+                                    <p>Дата: @foundBooking.Date.ToString("dd.MM.yyyy")</p>
+                                    <p>Время: @foundBooking.Time.ToString("HH:mm")</p>
+                                    <p>Количество гостей: @foundBooking.Guests</p>
+                                    <button class="submit-button" @onclick="ResetCheck">Проверить другую бронь</button>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string activeTab = "create";
+    private bool isBooked = false;
+    private bool bookingFound = false;
+    private bool showNotFound = false;
+    private string phoneCheck = "";
+    private int switchCount = 0;
+
+    private BookingData bookingData = new BookingData
+    {
+        Date = DateOnly.FromDateTime(DateTime.Today.AddDays(1)),
+        Time = new TimeOnly(19, 0)
+    };
+
+    private BookingData foundBooking = new BookingData();
+
+    // В реальном приложении это будет база данных
+    private static List<BookingData> bookings = new List<BookingData>();
+
+    private class BookingData
+    {
+        public string Name { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public DateOnly Date { get; set; }
+        public TimeOnly Time { get; set; }
+        public string Guests { get; set; } = "";
+    }
+
+    private void SwitchTab(string tab)
+    {
+        switchCount++;
+        activeTab = tab;
+        showNotFound = false;
+    }
+
+    private void SwitchToCreate()
+    {
+        SwitchTab("create");
+    }
+
+    private void SwitchToCheck()
+    {
+        SwitchTab("check");
+    }
+
+    private void HandleBooking()
+    {
+        // Добавляем бронь в список
+        bookings.Add(new BookingData
+        {
+            Name = bookingData.Name,
+            Phone = bookingData.Phone,
+            Date = bookingData.Date,
+            Time = bookingData.Time,
+            Guests = bookingData.Guests
+        });
+
+        isBooked = true;
+    }
+
+    private void ResetBooking()
+    {
+        isBooked = false;
+        bookingData = new BookingData
+        {
+            Date = DateOnly.FromDateTime(DateTime.Today.AddDays(1)),
+            Time = new TimeOnly(19, 0)
+        };
+    }
+
+    private void CheckBooking()
+    {
+        showNotFound = false;
+
+        if (string.IsNullOrWhiteSpace(phoneCheck))
+        {
+            showNotFound = true;
+            return;
+        }
+
+        // Ищем бронь по последним 4 цифрам телефона
+        // Извлекаем только цифры из номера телефона для сравнения
+        var booking = bookings.FirstOrDefault(b =>
+        {
+            var phoneDigits = new string(b.Phone.Where(char.IsDigit).ToArray());
+            var checkDigits = new string(phoneCheck.Where(char.IsDigit).ToArray());
+            return phoneDigits.EndsWith(checkDigits);
+        });
+
+        if (booking != null)
+        {
+            foundBooking = booking;
+            bookingFound = true;
+        }
+        else
+        {
+            showNotFound = true;
+        }
+    }
+
+    private void ResetCheck()
+    {
+        bookingFound = false;
+        phoneCheck = "";
+        showNotFound = false;
+    }
+}
