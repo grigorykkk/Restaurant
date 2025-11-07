@@ -10,19 +10,14 @@
         <h2 class="section-title">Booking</h2>
         <div class="section-content">
             <div class="booking-container">
-                    <!-- Отладочная информация -->
-                    <p style="text-align: center; color: #999; font-size: 12px; margin-bottom: 10px;">
-                        Активная вкладка: @activeTab | Переключений: @switchCount
-                    </p>
-
                     <!-- Переключатель между окнами -->
                     <div class="booking-tabs">
                         <button type="button" class="tab-button @(activeTab == "create" ? "active" : "")"
-                                @onclick="SwitchToCreate">
+                                @onclick="@(() => { activeTab = "create"; showNotFound = false; StateHasChanged(); })">
                             Забронировать столик
                         </button>
                         <button type="button" class="tab-button @(activeTab == "check" ? "active" : "")"
-                                @onclick="SwitchToCheck">
+                                @onclick="@(() => { activeTab = "check"; showNotFound = false; StateHasChanged(); })">
                             Проверить бронь
                         </button>
                     </div>
@@ -89,9 +84,7 @@
                             }
                         </div>
                     }
-
-                    <!-- Окно 2: Проверить бронь -->
-                    @if (activeTab == "check")
+                    else if (activeTab == "check")
                     {
                         <div class="tab-content">
                             @if (!bookingFound)
@@ -145,7 +138,6 @@
     private bool bookingFound = false;
     private bool showNotFound = false;
     private string phoneCheck = "";
-    private int switchCount = 0;
 
     private BookingData bookingData = new BookingData
     {
@@ -165,23 +157,6 @@
         public DateOnly Date { get; set; }
         public TimeOnly Time { get; set; }
         public string Guests { get; set; } = "";
-    }
-
-    private void SwitchTab(string tab)
-    {
-        switchCount++;
-        activeTab = tab;
-        showNotFound = false;
-    }
-
-    private void SwitchToCreate()
-    {
-        SwitchTab("create");
-    }
-
-    private void SwitchToCheck()
-    {
-        SwitchTab("check");
     }
 
     private void HandleBooking()
