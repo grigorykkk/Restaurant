@@ -1,0 +1,109 @@
+@page "/delivery"
+@rendermode InteractiveServer
+
+<HomeButton />
+
+<div class="container">
+    <h1 class="restaurant-title">Restaurant</h1>
+
+    <div class="content-section">
+        <h2 class="section-title">Delivery</h2>
+        <div class="section-content">
+            <div class="delivery-container">
+                    <div class="delivery-info">
+                        <h3>Условия доставки</h3>
+                        <ul class="delivery-list">
+                            <li>Бесплатная доставка при заказе от 1500 ₽</li>
+                            <li>Доставка по городу - 200 ₽</li>
+                            <li>Среднее время доставки: 45-60 минут</li>
+                            <li>Доставка работает ежедневно с 11:00 до 23:00</li>
+                            <li>Минимальная сумма заказа: 500 ₽</li>
+                            <li>Оплата наличными или картой курьеру</li>
+                        </ul>
+                    </div>
+
+                    <div class="delivery-form-section">
+                        @if (!orderPlaced)
+                        {
+                            @if (!showForm)
+                            {
+                                <button class="submit-button" @onclick="ShowOrderForm">
+                                    Оформить заказ
+                                </button>
+                            }
+                            else
+                            {
+                                <div class="delivery-form">
+                                    <h3>Оформление заказа</h3>
+                                    <input type="text" @bind="deliveryData.Name" placeholder="Ваше имя" />
+                                    <input type="tel" @bind="deliveryData.Phone" placeholder="Телефон" />
+                                    <input type="text" @bind="deliveryData.Address" placeholder="Адрес доставки" />
+                                    <input type="text" @bind="deliveryData.Apartment" placeholder="Квартира/Офис" />
+                                    <textarea @bind="deliveryData.Comments" placeholder="Комментарий к заказу" rows="3"></textarea>
+                                    <button class="submit-button" @onclick="PlaceOrder">
+                                        Подтвердить заказ
+                                    </button>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="success-message">
+                                <h3>Заказ принят!</h3>
+                                <p>Спасибо за заказ, @deliveryData.Name!</p>
+                                <p>Ваш заказ будет доставлен по адресу:</p>
+                                <p><strong>@deliveryData.Address</strong></p>
+                                <p>Ожидайте звонка от курьера</p>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="payment-methods">
+                        <h3>Способы оплаты</h3>
+                        <div class="payment-icons">
+                            <div class="payment-icon">Наличные</div>
+                            <div class="payment-icon">Visa/MasterCard</div>
+                            <div class="payment-icon">Мир</div>
+                            <div class="payment-icon">Apple Pay</div>
+                            <div class="payment-icon">Google Pay</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+
+<div class="navigation-container">
+    <Navigation />
+</div>
+
+@code {
+    private bool showForm = false;
+    private bool orderPlaced = false;
+
+    private DeliveryData deliveryData = new DeliveryData();
+
+    private class DeliveryData
+    {
+        public string Name { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public string Address { get; set; } = "";
+        public string Apartment { get; set; } = "";
+        public string Comments { get; set; } = "";
+    }
+
+    private void ShowOrderForm()
+    {
+        showForm = true;
+    }
+
+    private void PlaceOrder()
+    {
+        if (!string.IsNullOrWhiteSpace(deliveryData.Name) &&
+            !string.IsNullOrWhiteSpace(deliveryData.Phone) &&
+            !string.IsNullOrWhiteSpace(deliveryData.Address))
+        {
+            orderPlaced = true;
+        }
+    }
+}
