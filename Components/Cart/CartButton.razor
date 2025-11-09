@@ -1,0 +1,46 @@
+@rendermode InteractiveServer
+@using Restaurant_site.Services
+@inject CartService CartService
+
+<button class="floating-cart-button" @onclick="ToggleCart">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7.5 16.25a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5ZM15 16.25a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5ZM3.75 2.5h1.836a1.25 1.25 0 0 1 1.211.938l.62 2.437h10.208a1.25 1.25 0 0 1 1.211 1.563l-1.563 6.25a1.25 1.25 0 0 1-1.211.937H8.75a1.25 1.25 0 0 1-1.211-.937l-2.5-10"
+              stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>Корзина</span>
+    @if (CartService.TotalItems > 0)
+    {
+        <span class="floating-cart-badge">@CartService.TotalItems</span>
+    }
+</button>
+
+<CartModal IsOpen="isCartOpen" IsOpenChanged="OnCartOpenChanged" />
+
+@code {
+    private bool isCartOpen = false;
+
+    protected override void OnInitialized()
+    {
+        CartService.CartChanged += OnCartChanged;
+    }
+
+    private void OnCartChanged()
+    {
+        StateHasChanged();
+    }
+
+    private void ToggleCart()
+    {
+        isCartOpen = !isCartOpen;
+    }
+
+    private void OnCartOpenChanged(bool value)
+    {
+        isCartOpen = value;
+    }
+
+    public void Dispose()
+    {
+        CartService.CartChanged -= OnCartChanged;
+    }
+}

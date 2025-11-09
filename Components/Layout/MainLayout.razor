@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@using Restaurant_site.Components.Cart
 
 <!Doctype html>
 <html lang="ru">
@@ -13,6 +14,7 @@
 <body>
     <LoadingScreen />
     @Body
+    <CartButton />
     <script src="_framework/blazor.web.js"></script>
     <script>
         // Функция для перезапуска анимаций на главной странице

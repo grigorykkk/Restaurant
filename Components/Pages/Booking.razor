@@ -26,7 +26,7 @@
                     @if (activeTab == "create")
                     {
                         <div class="tab-content">
-                            @if (!isBooked)
+                            @if (!isBooked && !showTableSelection)
                             {
                                 <form class="booking-form" @onsubmit="HandleBooking" @onsubmit:preventDefault="true">
                                     <div class="form-group">
@@ -65,8 +65,61 @@
                                         </select>
                                     </div>
 
-                                    <button type="submit" class="submit-button">Забронировать столик</button>
+                                    <button type="submit" class="submit-button">Выбрать столик</button>
                                 </form>
+                            }
+                            else if (showTableSelection)
+                            {
+                                <div class="table-selection">
+                                    <h3>Выберите столик</h3>
+                                    <p style="margin-bottom: 20px; color: #666;">
+                                        Дата: @bookingData.Date.ToString("dd.MM.yyyy") |
+                                        Время: @bookingData.Time.ToString("HH:mm") |
+                                        Гостей: @bookingData.Guests
+                                    </p>
+
+                                    @if (availableTables.Count == 0)
+                                    {
+                                        <div class="error-message">
+                                            <p>К сожалению, на выбранное время нет доступных столиков.</p>
+                                            <p>Попробуйте выбрать другое время.</p>
+                                        </div>
+                                        <button class="submit-button" @onclick="BackToBookingForm" style="margin-top: 15px;">
+                                            Вернуться назад
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <div class="tables-grid">
+                                            @foreach (var tableAvailability in availableTables)
+                                            {
+                                                <div class="table-card @(tableAvailability.IsAvailableNow ? "available" : "available-later")">
+                                                    <div class="table-number">Столик №@tableAvailability.Table.Id</div>
+                                                    <div class="table-location">@tableAvailability.Table.Location</div>
+                                                    <div class="table-capacity">До @tableAvailability.Table.Capacity персон</div>
+                                                    <div class="table-status">
+                                                        @if (tableAvailability.IsAvailableNow)
+                                                        {
+                                                            <span class="status-badge available">✓ Свободен</span>
+                                                        }
+                                                        else if (tableAvailability.IsAvailableInOneHour)
+                                                        {
+                                                            <span class="status-badge later">
+                                                                Свободен с @tableAvailability.AvailableAt?.ToString("HH:mm")
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                    <button class="table-select-btn" @onclick="() => SelectTable(tableAvailability)">
+                                                        Выбрать
+                                                    </button>
+                                                </div>
+                                            }
+                                        </div>
+                                        <button class="submit-button secondary" @onclick="BackToBookingForm" style="margin-top: 20px;">
+                                            Вернуться назад
+                                        </button>
+                                    }
+                                </div>
                             }
                             else
                             {
@@ -77,7 +130,8 @@
                                     <p>Дата: @bookingData.Date.ToString("dd.MM.yyyy")</p>
                                     <p>Время: @bookingData.Time.ToString("HH:mm")</p>
                                     <p>Количество гостей: @bookingData.Guests</p>
-                                    <p class="booking-code">Код брони: последние 4 цифры вашего телефона</p>
+                                    <p>Столик №@bookingData.TableId (@bookingData.TableLocation, до @bookingData.TableCapacity персон)</p>
+                                    <p class="booking-code">Код брони: ваше имя + последние 4 цифры телефона</p>
                                     <p>Мы ждем вас! В случае изменений, пожалуйста, позвоните нам.</p>
                                     <button class="submit-button" @onclick="ResetBooking">Создать новую бронь</button>
                                 </div>
@@ -91,9 +145,15 @@
                             {
                                 <div class="booking-form">
                                     <div class="form-group">
+                                        <label for="checkName">Ваше имя</label>
+                                        <input type="text" id="checkName" @bind-value="nameCheck" @bind-value:event="oninput"
+                                               placeholder="Введите имя" required />
+                                    </div>
+
+                                    <div class="form-group">
                                         <label for="checkPhone">Последние 4 цифры телефона</label>
                                         <input type="text" id="checkPhone" @bind-value="phoneCheck" @bind-value:event="oninput"
-                                               placeholder="____" maxlength="4" />
+                                               placeholder="____" maxlength="4" required />
                                     </div>
 
                                     <button type="button" class="submit-button" @onclick="CheckBooking">Проверить бронь</button>
@@ -105,7 +165,7 @@
                                 {
                                     <div class="error-message">
                                         <p>Бронь не найдена. Проверьте правильность введенных данных.</p>
-                                        <p style="font-size: 12px;">Вы ввели: "@phoneCheck"</p>
+                                        <p style="font-size: 12px;">Имя: "@nameCheck", Телефон (последние 4 цифры): "@phoneCheck"</p>
                                     </div>
                                 }
                             }
@@ -118,6 +178,10 @@
                                     <p>Дата: @foundBooking.Date.ToString("dd.MM.yyyy")</p>
                                     <p>Время: @foundBooking.Time.ToString("HH:mm")</p>
                                     <p>Количество гостей: @foundBooking.Guests</p>
+                                    @if (foundBooking.TableId > 0)
+                                    {
+                                        <p>Столик №@foundBooking.TableId (@foundBooking.TableLocation, до @foundBooking.TableCapacity персон)</p>
+                                    }
                                     <button class="submit-button" @onclick="ResetCheck">Проверить другую бронь</button>
                                 </div>
                             }
@@ -138,6 +202,9 @@
     private bool bookingFound = false;
     private bool showNotFound = false;
     private string phoneCheck = "";
+    private bool showTableSelection = false;
+    private List<TableAvailability> availableTables = new List<TableAvailability>();
+    private string nameCheck = "";
 
     private BookingData bookingData = new BookingData
     {
@@ -150,6 +217,17 @@
     // В реальном приложении это будет база данных
     private static List<BookingData> bookings = new List<BookingData>();
 
+    // Список столиков ресторана (6 столиков)
+    private static readonly List<Table> tables = new List<Table>
+    {
+        new Table { Id = 1, Location = "У окна", Capacity = 2 },
+        new Table { Id = 2, Location = "В глубине зала", Capacity = 2 },
+        new Table { Id = 3, Location = "У окна", Capacity = 4 },
+        new Table { Id = 4, Location = "У прохода", Capacity = 4 },
+        new Table { Id = 5, Location = "В глубине зала", Capacity = 6 },
+        new Table { Id = 6, Location = "У прохода", Capacity = 6 }
+    };
+
     private class BookingData
     {
         public string Name { get; set; } = "";
@@ -157,10 +235,51 @@
         public DateOnly Date { get; set; }
         public TimeOnly Time { get; set; }
         public string Guests { get; set; } = "";
+        public int TableId { get; set; }
+        public string? TableLocation { get; set; }
+        public int TableCapacity { get; set; }
+    }
+
+    private class Table
+    {
+        public int Id { get; set; }
+        public string Location { get; set; } = "";
+        public int Capacity { get; set; }
+    }
+
+    private class TableAvailability
+    {
+        public Table Table { get; set; } = new Table();
+        public bool IsAvailableNow { get; set; }
+        public bool IsAvailableInOneHour { get; set; }
+        public TimeOnly? AvailableAt { get; set; }
     }
 
     private void HandleBooking()
     {
+        // Переходим к выбору столика
+        ProceedToTableSelection();
+    }
+
+    private void ProceedToTableSelection()
+    {
+        // Получаем количество гостей
+        int guestCount = int.TryParse(bookingData.Guests, out int count) ? count : 6;
+
+        // Получаем доступные столики
+        availableTables = GetAvailableTables(bookingData.Date, bookingData.Time, guestCount);
+
+        // Показываем экран выбора столика
+        showTableSelection = true;
+    }
+
+    private void SelectTable(TableAvailability tableAvailability)
+    {
+        // Сохраняем информацию о выбранном столике
+        bookingData.TableId = tableAvailability.Table.Id;
+        bookingData.TableLocation = tableAvailability.Table.Location;
+        bookingData.TableCapacity = tableAvailability.Table.Capacity;
+
         // Добавляем бронь в список
         bookings.Add(new BookingData
         {
@@ -168,15 +287,27 @@
             Phone = bookingData.Phone,
             Date = bookingData.Date,
             Time = bookingData.Time,
-            Guests = bookingData.Guests
+            Guests = bookingData.Guests,
+            TableId = bookingData.TableId,
+            TableLocation = bookingData.TableLocation,
+            TableCapacity = bookingData.TableCapacity
         });
 
+        // Скрываем выбор столиков и показываем подтверждение
+        showTableSelection = false;
         isBooked = true;
+    }
+
+    private void BackToBookingForm()
+    {
+        showTableSelection = false;
     }
 
     private void ResetBooking()
     {
         isBooked = false;
+        showTableSelection = false;
+        availableTables.Clear();
         bookingData = new BookingData
         {
             Date = DateOnly.FromDateTime(DateTime.Today.AddDays(1)),
@@ -188,19 +319,23 @@
     {
         showNotFound = false;
 
-        if (string.IsNullOrWhiteSpace(phoneCheck))
+        // Проверяем, что оба поля заполнены
+        if (string.IsNullOrWhiteSpace(nameCheck) || string.IsNullOrWhiteSpace(phoneCheck))
         {
             showNotFound = true;
             return;
         }
 
-        // Ищем бронь по последним 4 цифрам телефона
+        // Ищем бронь по имени И последним 4 цифрам телефона
         // Извлекаем только цифры из номера телефона для сравнения
         var booking = bookings.FirstOrDefault(b =>
         {
             var phoneDigits = new string(b.Phone.Where(char.IsDigit).ToArray());
             var checkDigits = new string(phoneCheck.Where(char.IsDigit).ToArray());
-            return phoneDigits.EndsWith(checkDigits);
+            var phoneMatch = phoneDigits.EndsWith(checkDigits);
+            var nameMatch = b.Name.Equals(nameCheck, StringComparison.OrdinalIgnoreCase);
+
+            return phoneMatch && nameMatch;
         });
 
         if (booking != null)
@@ -218,6 +353,64 @@
     {
         bookingFound = false;
         phoneCheck = "";
+        nameCheck = "";
         showNotFound = false;
+    }
+
+    private List<TableAvailability> GetAvailableTables(DateOnly date, TimeOnly time, int guestCount)
+    {
+        var availableTables = new List<TableAvailability>();
+
+        // Проверяем каждый столик
+        foreach (var table in tables)
+        {
+            // Фильтруем по вместимости - столик должен вмещать количество гостей
+            // Для "6+ гостей" нужен столик на 6 персон
+            int requiredCapacity = guestCount;
+            if (guestCount > 6) requiredCapacity = 6;
+
+            if (table.Capacity < requiredCapacity)
+                continue;
+
+            // Проверяем, занят ли столик на это время
+            var conflictingBooking = bookings.FirstOrDefault(b =>
+                b.TableId == table.Id &&
+                b.Date == date &&
+                Math.Abs((b.Time.ToTimeSpan() - time.ToTimeSpan()).TotalMinutes) < 120 // 2 часа на бронь
+            );
+
+            var availability = new TableAvailability
+            {
+                Table = table,
+                IsAvailableNow = conflictingBooking == null,
+                IsAvailableInOneHour = false,
+                AvailableAt = null
+            };
+
+            // Если столик занят сейчас, проверяем, освободится ли он через час
+            if (conflictingBooking != null)
+            {
+                var bookingEndTime = conflictingBooking.Time.AddHours(2); // Предполагаем, что бронь на 2 часа
+                var oneHourLater = time.AddHours(1);
+
+                if (bookingEndTime <= oneHourLater)
+                {
+                    availability.IsAvailableInOneHour = true;
+                    availability.AvailableAt = bookingEndTime;
+                }
+            }
+
+            // Добавляем столик если он доступен сейчас или через час
+            if (availability.IsAvailableNow || availability.IsAvailableInOneHour)
+            {
+                availableTables.Add(availability);
+            }
+        }
+
+        // Сортируем: сначала доступные сейчас, потом по вместимости
+        return availableTables
+            .OrderByDescending(t => t.IsAvailableNow)
+            .ThenBy(t => t.Table.Capacity)
+            .ToList();
     }
 }
