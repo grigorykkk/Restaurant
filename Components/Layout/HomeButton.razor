@@ -1,5 +1,21 @@
-<a href="/" class="home-button">Home</a>
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<button class="home-button" @onclick="HandleHomeClick" type="button">Home</button>
 
 @code {
-    // Компонент кнопки Home
+    private async Task HandleHomeClick()
+    {
+        await JS.InvokeVoidAsync("console.log", "Home button clicked - Blazor handler");
+        await JS.InvokeVoidAsync("console.log", $"Current URL: {Navigation.Uri}");
+
+        Console.WriteLine("Blazor @onclick handler fired!");
+        Console.WriteLine($"Current URL before: {Navigation.Uri}");
+
+        Navigation.NavigateTo("/", false);
+
+        await JS.InvokeVoidAsync("console.log", "NavigateTo called");
+        Console.WriteLine("Navigation to / triggered");
+    }
 }

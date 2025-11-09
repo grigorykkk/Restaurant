@@ -28,6 +28,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvSG9tZUJ1dHRvbi5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/grigory/RiderProjects/Restaurant site/Components/Layout/LoadingScreen.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTG9hZGluZ1NjcmVlbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/grigory/RiderProjects/Restaurant site/Components/Layout/Navigation.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTmF2aWdhdGlvbi5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 

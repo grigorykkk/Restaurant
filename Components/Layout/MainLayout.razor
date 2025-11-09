@@ -11,7 +11,116 @@
     <title>Restaurant</title>
 </head>
 <body>
+    <LoadingScreen />
     @Body
     <script src="_framework/blazor.web.js"></script>
+    <script>
+        // Функция для перезапуска анимаций на главной странице
+        window.restartHomeAnimations = function(retryCount) {
+            retryCount = retryCount || 0;
+
+            console.log('Restarting home page animations... (attempt ' + (retryCount + 1) + ')');
+
+            // Находим все анимированные элементы
+            var letters = document.querySelectorAll('.letter-animate');
+            var corners = document.querySelectorAll('.animate-corner-left, .animate-corner-right');
+            var nav = document.querySelector('.animate-navigation');
+
+            console.log('Found elements - Letters:', letters.length, 'Corners:', corners.length, 'Nav:', nav ? 'yes' : 'no');
+
+            // Если элементов нет, повторяем попытку до 10 раз
+            if (letters.length === 0 && retryCount < 10) {
+                console.log('Elements not found, retrying in 100ms...');
+                setTimeout(function() {
+                    window.restartHomeAnimations(retryCount + 1);
+                }, 100);
+                return;
+            }
+
+            if (letters.length === 0) {
+                console.log('Elements not found after 10 attempts, aborting');
+                return;
+            }
+
+            // Шаг 1: Удаляем класс loaded
+            document.body.classList.remove('loaded');
+
+            // Шаг 2: Сбрасываем анимации через getComputedStyle (принудительный reflow)
+            letters.forEach(function(letter) {
+                letter.style.animation = 'none';
+                void letter.offsetHeight; // Trigger reflow
+                letter.style.animation = '';
+            });
+
+            corners.forEach(function(corner) {
+                corner.style.animation = 'none';
+                void corner.offsetHeight; // Trigger reflow
+                corner.style.animation = '';
+            });
+
+            if (nav) {
+                nav.style.animation = 'none';
+                void nav.offsetHeight; // Trigger reflow
+                nav.style.animation = '';
+            }
+
+            // Шаг 3: Добавляем класс loaded для запуска анимаций
+            requestAnimationFrame(function() {
+                document.body.classList.add('loaded');
+                console.log('Animations restarted successfully');
+            });
+        };
+
+        // Запускаем анимации после завершения прогресс-бара
+        function startAnimations() {
+            console.log('Starting page load sequence...');
+
+            // Всегда скрываем loading overlay независимо от страницы
+            var overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+                console.log('Loading overlay hidden');
+
+                // Полностью удаляем overlay через 0.5 секунды после скрытия
+                setTimeout(function() {
+                    if (overlay.parentNode) {
+                        overlay.remove();
+                        console.log('Loading overlay removed from DOM');
+                    }
+                }, 500);
+            }
+
+            // Проверяем, на главной ли мы странице
+            var letters = document.querySelectorAll('.letter-animate');
+
+            console.log('Letters found:', letters.length);
+
+            if (letters.length > 0) {
+                // Мы на главной странице - запускаем анимации
+                console.log('Home page detected - starting animations');
+                document.body.classList.add('loaded');
+                console.log('Body classes:', document.body.className);
+            } else {
+                // Не на главной странице - просто продолжаем
+                console.log('Not home page - no animations needed');
+            }
+        }
+
+        setTimeout(startAnimations, 1600); // 1.5s прогресс-бар + 100ms буфер
+
+        // Отслеживаем навигацию Blazor для перезапуска анимаций
+        Blazor.addEventListener('enhancedload', function() {
+            console.log('[Navigation] Enhanced navigation detected');
+            var currentPath = window.location.pathname;
+            console.log('[Navigation] Current path:', currentPath);
+
+            if (currentPath === '/' || currentPath === '') {
+                console.log('[Navigation] Home page - restarting animations');
+                setTimeout(function() {
+                    window.restartHomeAnimations();
+                }, 100);
+            }
+        });
+    </script>
 </body>
 </html>
