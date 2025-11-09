@@ -1,0 +1,139 @@
+@using Restaurant_site.Models
+@using Restaurant_site.Services
+@inject CartService CartService
+@inject NavigationManager NavigationManager
+
+@if (IsOpen)
+{
+    <div class="cart-modal-overlay" @onclick="Close">
+        <div class="cart-modal-content" @onclick:stopPropagation="true">
+            <div class="cart-modal-header">
+                <h2>Корзина</h2>
+                <button class="cart-modal-close" @onclick="Close">×</button>
+            </div>
+
+            <div class="cart-modal-body">
+                @if (CartService.Items.Count == 0)
+                {
+                    <div class="cart-empty">
+                        <p>Корзина пуста</p>
+                        <p class="cart-empty-hint">Добавьте блюда из меню</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="cart-items-list">
+                        @foreach (var item in CartService.Items)
+                        {
+                            <div class="cart-item-row">
+                                <div class="cart-item-info">
+                                    <h4>@item.MenuItem.Name</h4>
+                                    <span class="cart-item-price">@item.MenuItem.Price ₽</span>
+                                </div>
+                                <div class="cart-item-controls">
+                                    <div class="cart-quantity-controls">
+                                        <button class="cart-quantity-button" @onclick="() => DecreaseQuantity(item.MenuItem.Id)">−</button>
+                                        <span class="cart-quantity-display">@item.Quantity</span>
+                                        <button class="cart-quantity-button" @onclick="() => IncreaseQuantity(item.MenuItem.Id)">+</button>
+                                    </div>
+                                    <button class="cart-remove-button" @onclick="() => RemoveItem(item.MenuItem.Id)">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 0 1 1.334-1.334h2.666a1.333 1.333 0 0 1 1.334 1.334V4m2 0v9.333a1.333 1.333 0 0 1-1.334 1.334H4.667a1.333 1.333 0 0 1-1.334-1.334V4h9.334Z"
+                                                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </button>
+                                    <span class="cart-item-total">@item.TotalPrice ₽</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="cart-summary">
+                        <div class="cart-total-row">
+                            <span class="cart-total-label">Всего товаров:</span>
+                            <span class="cart-total-value">@CartService.TotalItems шт.</span>
+                        </div>
+                        <div class="cart-total-row cart-total-price">
+                            <span class="cart-total-label">Итого:</span>
+                            <span class="cart-total-value">@CartService.TotalPrice ₽</span>
+                        </div>
+                        @if (!CartService.IsMinOrderAmountMet)
+                        {
+                            <div class="cart-min-order-warning">
+                                Минимальная сумма заказа: @CartService.MinOrderAmount ₽
+                                <br/>
+                                Добавьте еще на @(CartService.MinOrderAmount - CartService.TotalPrice) ₽
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            @if (CartService.Items.Count > 0)
+            {
+                <div class="cart-modal-footer">
+                    <button class="cart-continue-shopping" @onclick="Close">
+                        Продолжить покупки
+                    </button>
+                    <button class="cart-checkout-button"
+                            @onclick="GoToCheckout"
+                            disabled="@(!CartService.IsMinOrderAmountMet)">
+                        Перейти к оформлению
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    protected override void OnInitialized()
+    {
+        CartService.CartChanged += OnCartChanged;
+    }
+
+    private void OnCartChanged()
+    {
+        StateHasChanged();
+    }
+
+    private async Task Close()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+    private void IncreaseQuantity(int menuItemId)
+    {
+        var currentQuantity = CartService.GetQuantity(menuItemId);
+        CartService.UpdateQuantity(menuItemId, currentQuantity + 1);
+    }
+
+    private void DecreaseQuantity(int menuItemId)
+    {
+        var currentQuantity = CartService.GetQuantity(menuItemId);
+        CartService.UpdateQuantity(menuItemId, currentQuantity - 1);
+    }
+
+    private void RemoveItem(int menuItemId)
+    {
+        CartService.RemoveFromCart(menuItemId);
+    }
+
+    private async Task GoToCheckout()
+    {
+        await Close();
+        NavigationManager.NavigateTo("/delivery");
+    }
+
+    public void Dispose()
+    {
+        CartService.CartChanged -= OnCartChanged;
+    }
+}

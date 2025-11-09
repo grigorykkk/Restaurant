@@ -1,5 +1,9 @@
 @page "/delivery"
 @rendermode InteractiveServer
+@using Restaurant_site.Models
+@using Restaurant_site.Services
+@inject CartService CartService
+@inject NavigationManager NavigationManager
 
 <HomeButton />
 
@@ -17,7 +21,7 @@
                             <li>Доставка по городу - 200 ₽</li>
                             <li>Среднее время доставки: 45-60 минут</li>
                             <li>Доставка работает ежедневно с 11:00 до 23:00</li>
-                            <li>Минимальная сумма заказа: 500 ₽</li>
+                            <li>Минимальная сумма заказа: @CartService.MinOrderAmount ₽</li>
                             <li>Оплата наличными или картой курьеру</li>
                         </ul>
                     </div>
@@ -25,16 +29,60 @@
                     <div class="delivery-form-section">
                         @if (!orderPlaced)
                         {
-                            @if (!showForm)
+                            @if (CartService.Items.Count == 0)
                             {
-                                <button class="submit-button" @onclick="ShowOrderForm">
-                                    Оформить заказ
-                                </button>
+                                <div class="empty-cart-message">
+                                    <p>Корзина пуста. Сначала выберите блюда из меню.</p>
+                                    <button class="submit-button" @onclick="GoToMenu">
+                                        Перейти в меню
+                                    </button>
+                                </div>
                             }
                             else
                             {
+                                <div class="order-summary-section">
+                                    <div class="order-summary-header">
+                                        <h3>Ваш заказ</h3>
+                                        <button class="edit-order-button" @onclick="GoToMenu">
+                                            Добавить ещё блюд
+                                        </button>
+                                    </div>
+                                    <div class="order-summary-items">
+                                        @foreach (var item in CartService.Items)
+                                        {
+                                            <div class="order-summary-item">
+                                                <span class="item-name">@item.MenuItem.Name</span>
+                                                <span class="item-quantity">×@item.Quantity</span>
+                                                <span class="item-price">@item.TotalPrice ₽</span>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="order-summary-total">
+                                        <span>Итого:</span>
+                                        <span class="total-price">@CartService.TotalPrice ₽</span>
+                                    </div>
+                                    @if (CartService.TotalPrice >= 1500)
+                                    {
+                                        <div class="delivery-cost free">
+                                            <span>Доставка:</span>
+                                            <span>Бесплатно</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="delivery-cost">
+                                            <span>Доставка:</span>
+                                            <span>200 ₽</span>
+                                        </div>
+                                        <div class="order-summary-total">
+                                            <span>К оплате:</span>
+                                            <span class="total-price">@(CartService.TotalPrice + 200) ₽</span>
+                                        </div>
+                                    }
+                                </div>
+
                                 <div class="delivery-form">
-                                    <h3>Оформление заказа</h3>
+                                    <h3>Данные для доставки</h3>
                                     <input type="text" @bind="deliveryData.Name" placeholder="Ваше имя" />
                                     <input type="tel" @bind="deliveryData.Phone" placeholder="Телефон" />
                                     <input type="text" @bind="deliveryData.Address" placeholder="Адрес доставки" />
@@ -50,10 +98,15 @@
                         {
                             <div class="success-message">
                                 <h3>Заказ принят!</h3>
+                                <p>Номер заказа: <strong>@orderNumber</strong></p>
                                 <p>Спасибо за заказ, @deliveryData.Name!</p>
                                 <p>Ваш заказ будет доставлен по адресу:</p>
-                                <p><strong>@deliveryData.Address</strong></p>
+                                <p><strong>@deliveryData.Address@(string.IsNullOrWhiteSpace(deliveryData.Apartment) ? "" : ", " + deliveryData.Apartment)</strong></p>
+                                <p>Сумма заказа: <strong>@finalTotal ₽</strong></p>
                                 <p>Ожидайте звонка от курьера</p>
+                                <button class="submit-button" @onclick="MakeNewOrder">
+                                    Сделать новый заказ
+                                </button>
                             </div>
                         }
                     </div>
@@ -78,8 +131,9 @@
 </div>
 
 @code {
-    private bool showForm = false;
     private bool orderPlaced = false;
+    private string orderNumber = "";
+    private decimal finalTotal = 0;
 
     private DeliveryData deliveryData = new DeliveryData();
 
@@ -92,9 +146,19 @@
         public string Comments { get; set; } = "";
     }
 
-    private void ShowOrderForm()
+    protected override void OnInitialized()
     {
-        showForm = true;
+        CartService.CartChanged += OnCartChanged;
+    }
+
+    private void OnCartChanged()
+    {
+        StateHasChanged();
+    }
+
+    private void GoToMenu()
+    {
+        NavigationManager.NavigateTo("/menu");
     }
 
     private void PlaceOrder()
@@ -103,7 +167,43 @@
             !string.IsNullOrWhiteSpace(deliveryData.Phone) &&
             !string.IsNullOrWhiteSpace(deliveryData.Address))
         {
+            // Генерация номера заказа
+            orderNumber = $"ORD-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
+
+            // Расчет финальной суммы
+            var deliveryCost = CartService.TotalPrice >= 1500 ? 0 : 200;
+            finalTotal = CartService.TotalPrice + deliveryCost;
+
+            // Создание заказа
+            var order = new Order
+            {
+                OrderNumber = orderNumber,
+                Items = new List<CartItem>(CartService.Items),
+                Name = deliveryData.Name,
+                Phone = deliveryData.Phone,
+                Address = deliveryData.Address,
+                Apartment = deliveryData.Apartment,
+                Comments = deliveryData.Comments,
+                TotalPrice = finalTotal,
+                OrderDate = DateTime.Now
+            };
+
+            // Очистка корзины
+            CartService.ClearCart();
+
             orderPlaced = true;
         }
+    }
+
+    private void MakeNewOrder()
+    {
+        orderPlaced = false;
+        deliveryData = new DeliveryData();
+        NavigationManager.NavigateTo("/menu");
+    }
+
+    public void Dispose()
+    {
+        CartService.CartChanged -= OnCartChanged;
     }
 }

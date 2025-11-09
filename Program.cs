@@ -1,10 +1,18 @@
 using Restaurant_site.Components;
+using Restaurant_site.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Register application services
+builder.Services.AddSingleton<MenuService>();
+builder.Services.AddScoped<CartService>();
+
+// Add HttpClient for API calls (if needed)
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
