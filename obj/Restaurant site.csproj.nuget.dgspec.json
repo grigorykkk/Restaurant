@@ -1,31 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "E:\\Git\\Restaurant\\Restaurant site.csproj": {}
+    "/Users/grigory/RiderProjects/Restaurant site/Restaurant site.csproj": {}
   },
   "projects": {
-    "E:\\Git\\Restaurant\\Restaurant site.csproj": {
+    "/Users/grigory/RiderProjects/Restaurant site/Restaurant site.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\Git\\Restaurant\\Restaurant site.csproj",
+        "projectUniqueName": "/Users/grigory/RiderProjects/Restaurant site/Restaurant site.csproj",
         "projectName": "Restaurant_site",
-        "projectPath": "E:\\Git\\Restaurant\\Restaurant site.csproj",
-        "packagesPath": "C:\\Users\\TPC\\.nuget\\packages\\",
-        "outputPath": "E:\\Git\\Restaurant\\obj\\",
+        "projectPath": "/Users/grigory/RiderProjects/Restaurant site/Restaurant site.csproj",
+        "packagesPath": "/Users/grigory/.nuget/packages/",
+        "outputPath": "/Users/grigory/RiderProjects/Restaurant site/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\TPC\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/grigory/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -86,7 +80,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/Users/grigory/.dotnet/sdk/9.0.305/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
