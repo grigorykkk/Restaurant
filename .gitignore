@@ -1,0 +1,23 @@
+# Database
+*.db
+*.db-shm
+*.db-wal
+__EFMigrationsHistory.txt
+
+# IDE and build
+.vs/
+.idea/
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.log
+
+# Runtime
+appsettings.Development.json
+appsettings.Production.json
+
+# OS
+.DS_Store
+Thumbs.db
