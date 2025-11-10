@@ -13,7 +13,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddDatabaseServices(builder.Configuration);
 
 // Register application services
-builder.Services.AddSingleton<MenuService>();
+builder.Services.AddScoped<MenuService>();
 builder.Services.AddScoped<CartService>();
 
 // Add HttpClient for API calls (if needed)

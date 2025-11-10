@@ -1,23 +1,89 @@
-# Database
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options
+.vs/
+.vscode/
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Database files
 *.db
 *.db-shm
 *.db-wal
-__EFMigrationsHistory.txt
+*.sqlite
+*.sqlite3
 
-# IDE and build
-.vs/
-.idea/
-bin/
-obj/
-*.user
+# User-specific files
+*.rsuser
 *.suo
-*.cache
+*.user
+*.userosscache
+*.sln.docstates
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+**/packages/*
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+# ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# TeamCity
+_TeamCity*
+
+# DotCover
+*.dotCover
+
+# NCrunch
+_NCrunch_*
+.*crunch*.local.xml
+nCrunchTemp_*
+
+# Backup & report files
+*~
+*.bak
+*.backup
+*.tmp
 *.log
 
-# Runtime
-appsettings.Development.json
-appsettings.Production.json
-
-# OS
-.DS_Store
-Thumbs.db
+# Publish profiles
+*.pubxml
+*.publishproj

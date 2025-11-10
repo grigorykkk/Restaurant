@@ -1,6 +1,4 @@
-﻿using Restaurant_site.Models;
-
-namespace Restaurant_site.Services
+﻿namespace Restaurant_site.Services
 {
     public interface IRestaurantService
     {
@@ -12,5 +10,7 @@ namespace Restaurant_site.Services
         Task<bool> CreateOrderAsync(Order order);
         Task<User?> GetUserByPhoneAsync(string phoneNum);
         Task<User> CreateUserAsync(User user);
+        Task<bool> CheckTableAvailabilityAsync(int tableId, DateTime date);
+        Task<List<Reservation>> GetAllReservationsAsync();
     }
 }

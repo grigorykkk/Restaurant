@@ -590,6 +590,16 @@ body {
 }
 
 /* Стили для контактов */
+.contact-info-section {
+    display: flex;
+    justify-content: center;
+}
+
+.contact-info-section .section-card {
+    width: auto;
+    max-width: 500px;
+}
+
 .contacts-container {
     width: 100%;
 }
@@ -608,9 +618,9 @@ body {
 
 .contact-info-full {
     background-color: white;
-    padding: 40px;
+    padding: 25px;
     border-radius: 15px;
-    max-width: 600px;
+    max-width: 100%;
     margin: 0 auto;
 }
 
