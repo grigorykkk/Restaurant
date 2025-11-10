@@ -1,11 +1,16 @@
 using Restaurant_site.Components;
 using Restaurant_site.Services;
+using Restaurant_site.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Database
+builder.Services.AddDatabaseServices(builder.Configuration);
 
 // Register application services
 builder.Services.AddSingleton<MenuService>();
@@ -15,6 +20,13 @@ builder.Services.AddScoped<CartService>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
+
+// Initialize database
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await DataSeeder.Initialize(context);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
