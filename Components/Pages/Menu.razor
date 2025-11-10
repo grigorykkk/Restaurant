@@ -1,6 +1,5 @@
 @page "/menu"
 @rendermode InteractiveServer
-@using Restaurant_site.Models
 @using Restaurant_site.Services
 @inject MenuService MenuService
 @inject CartService CartService
@@ -12,53 +11,44 @@
 
     <div class="content-section">
         <div class="section-card">
-            <h2 class="section-title">Menu</h2>
+            <h2 class="section-title">Меню</h2>
             <div class="section-content">
                 <div class="menu-container">
                     <div class="menu-filters">
-                        <button class="filter-button @(selectedCategory == MenuCategory.All ? "active" : "")"
-                                @onclick='() => FilterMenu(MenuCategory.All)'>
+                        <button class="filter-button @(selectedCategoryId == 0 ? "active" : "")"
+                                @onclick='() => FilterMenu(0)'>
                             Все
                         </button>
-                        <button class="filter-button @(selectedCategory == MenuCategory.Appetizers ? "active" : "")"
-                                @onclick='() => FilterMenu(MenuCategory.Appetizers)'>
-                            Закуски
-                        </button>
-                        <button class="filter-button @(selectedCategory == MenuCategory.Main ? "active" : "")"
-                                @onclick='() => FilterMenu(MenuCategory.Main)'>
-                            Основное
-                        </button>
-                        <button class="filter-button @(selectedCategory == MenuCategory.Desserts ? "active" : "")"
-                                @onclick='() => FilterMenu(MenuCategory.Desserts)'>
-                            Десерты
-                        </button>
-                        <button class="filter-button @(selectedCategory == MenuCategory.Drinks ? "active" : "")"
-                                @onclick='() => FilterMenu(MenuCategory.Drinks)'>
-                            Напитки
-                        </button>
+                        @foreach (var dishType in dishTypes)
+                        {
+                            <button class="filter-button @(selectedCategoryId == dishType.IdDishType ? "active" : "")"
+                                    @onclick='() => FilterMenu(dishType.IdDishType)'>
+                                @dishType.Title
+                            </button>
+                        }
                     </div>
 
                     <div class="menu-items">
-                        @foreach (var item in GetFilteredMenu())
+                        @foreach (var dish in dishes)
                         {
                             <div class="menu-item">
                                 <div class="menu-item-header">
-                                    <h3>@item.Name</h3>
-                                    <span class="menu-price">@item.Price ₽</span>
+                                    <h3>@dish.Title</h3>
+                                    <span class="menu-price">@dish.Cost ₽</span>
                                 </div>
-                                <p class="menu-description">@item.Description</p>
+                                <p class="menu-description">@dish.Description</p>
                                 <div class="menu-item-actions">
-                                    @if (CartService.IsInCart(item.Id))
+                                    @if (CartService.IsInCart(dish.IdDish))
                                     {
                                         <div class="quantity-controls">
-                                            <button class="quantity-button" @onclick="() => DecreaseQuantity(item)">−</button>
-                                            <span class="quantity-display">@CartService.GetQuantity(item.Id)</span>
-                                            <button class="quantity-button" @onclick="() => IncreaseQuantity(item)">+</button>
+                                            <button class="quantity-button" @onclick="() => DecreaseQuantity(dish)">−</button>
+                                            <span class="quantity-display">@CartService.GetQuantity(dish.IdDish)</span>
+                                            <button class="quantity-button" @onclick="() => IncreaseQuantity(dish)">+</button>
                                         </div>
                                     }
                                     else
                                     {
-                                        <button class="add-to-cart-button" @onclick="() => AddToCart(item)">
+                                        <button class="add-to-cart-button" @onclick="() => AddToCart(dish)">
                                             + В корзину
                                         </button>
                                     }
@@ -77,12 +67,14 @@
 </div>
 
 @code {
-    private MenuCategory selectedCategory = MenuCategory.All;
-    private List<MenuItem> menuItems = new();
+    private int selectedCategoryId = 0;
+    private List<DishType> dishTypes = new();
+    private List<Dish> dishes = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        menuItems = MenuService.GetAllMenuItems();
+        dishTypes = await MenuService.GetAllDishTypesAsync();
+        dishes = await MenuService.GetAllDishesAsync();
         CartService.CartChanged += OnCartChanged;
     }
 
@@ -91,30 +83,26 @@
         StateHasChanged();
     }
 
-    private void FilterMenu(MenuCategory category)
+    private async Task FilterMenu(int categoryId)
     {
-        selectedCategory = category;
+        selectedCategoryId = categoryId;
+        dishes = await MenuService.GetDishesByCategoryAsync(categoryId);
     }
 
-    private List<MenuItem> GetFilteredMenu()
+    private void AddToCart(Dish dish)
     {
-        return MenuService.GetMenuItemsByCategory(selectedCategory);
+        CartService.AddToCart(dish);
     }
 
-    private void AddToCart(MenuItem item)
+    private void IncreaseQuantity(Dish dish)
     {
-        CartService.AddToCart(item);
+        CartService.AddToCart(dish, 1);
     }
 
-    private void IncreaseQuantity(MenuItem item)
+    private void DecreaseQuantity(Dish dish)
     {
-        CartService.AddToCart(item, 1);
-    }
-
-    private void DecreaseQuantity(MenuItem item)
-    {
-        var currentQuantity = CartService.GetQuantity(item.Id);
-        CartService.UpdateQuantity(item.Id, currentQuantity - 1);
+        var currentQuantity = CartService.GetQuantity(dish.IdDish);
+        CartService.UpdateQuantity(dish.IdDish, currentQuantity - 1);
     }
 
     public void Dispose()

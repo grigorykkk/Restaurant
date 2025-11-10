@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Restaurant_site.Models;
 
 public class ApplicationDbContext : DbContext
 {
@@ -14,6 +13,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Order> Orders { get; set; }
     public DbSet<DishInOrder> DishInOrders { get; set; }
     public DbSet<Reservation> Reservations { get; set; }
+    public DbSet<Cart> Carts { get; set; }
+    public DbSet<CartItem> CartItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -56,6 +57,11 @@ public class ApplicationDbContext : DbContext
             .WithMany(u => u.Reservations)
             .HasForeignKey(r => r.PhoneNum);
 
+        modelBuilder.Entity<Reservation>()
+            .HasOne(r => r.Table)
+            .WithMany(t => t.Reservations)
+            .HasForeignKey(r => r.IdTable);
+
         modelBuilder.Entity<Order>()
             .HasOne(o => o.User)
             .WithMany(u => u.Orders)
@@ -70,5 +76,27 @@ public class ApplicationDbContext : DbContext
             .HasOne(dio => dio.Order)
             .WithMany(o => o.DishInOrders)
             .HasForeignKey(dio => dio.IdOrder);
+
+        modelBuilder.Entity<Cart>()
+            .HasKey(c => c.IdCart);
+
+        modelBuilder.Entity<CartItem>()
+            .HasKey(ci => ci.IdCartItem);
+
+        modelBuilder.Entity<Cart>()
+            .HasOne(c => c.User)
+            .WithMany()
+            .HasForeignKey(c => c.PhoneNum)
+            .IsRequired(false);
+
+        modelBuilder.Entity<CartItem>()
+            .HasOne(ci => ci.Cart)
+            .WithMany(c => c.CartItems)
+            .HasForeignKey(ci => ci.IdCart);
+
+        modelBuilder.Entity<CartItem>()
+            .HasOne(ci => ci.Dish)
+            .WithMany()
+            .HasForeignKey(ci => ci.IdDish);
     }
 }

@@ -1,8 +1,8 @@
 @page "/delivery"
 @rendermode InteractiveServer
-@using Restaurant_site.Models
 @using Restaurant_site.Services
 @inject CartService CartService
+@inject IRestaurantService RestaurantService
 @inject NavigationManager NavigationManager
 
 <HomeButton />
@@ -11,7 +11,7 @@
     <h1 class="restaurant-title">Restaurant</h1>
 
     <div class="content-section">
-        <h2 class="section-title">Delivery</h2>
+        <h2 class="section-title">Доставка</h2>
         <div class="section-content">
             <div class="delivery-container">
                     <div class="delivery-info">
@@ -51,7 +51,7 @@
                                         @foreach (var item in CartService.Items)
                                         {
                                             <div class="order-summary-item">
-                                                <span class="item-name">@item.MenuItem.Name</span>
+                                                <span class="item-name">@item.Dish.Title</span>
                                                 <span class="item-quantity">×@item.Quantity</span>
                                                 <span class="item-price">@item.TotalPrice ₽</span>
                                             </div>
@@ -83,6 +83,12 @@
 
                                 <div class="delivery-form">
                                     <h3>Данные для доставки</h3>
+                                    @if (!string.IsNullOrEmpty(errorMessage))
+                                    {
+                                        <div class="error-message" style="color: red; margin-bottom: 10px; padding: 10px; background-color: #ffebee; border-radius: 4px;">
+                                            @errorMessage
+                                        </div>
+                                    }
                                     <input type="text" @bind="deliveryData.Name" placeholder="Ваше имя" />
                                     <input type="tel" @bind="deliveryData.Phone" placeholder="Телефон" />
                                     <input type="text" @bind="deliveryData.Address" placeholder="Адрес доставки" />
@@ -134,6 +140,7 @@
     private bool orderPlaced = false;
     private string orderNumber = "";
     private decimal finalTotal = 0;
+    private string? errorMessage = null;
 
     private DeliveryData deliveryData = new DeliveryData();
 
@@ -161,37 +168,69 @@
         NavigationManager.NavigateTo("/menu");
     }
 
-    private void PlaceOrder()
+    private async Task PlaceOrder()
     {
         if (!string.IsNullOrWhiteSpace(deliveryData.Name) &&
             !string.IsNullOrWhiteSpace(deliveryData.Phone) &&
             !string.IsNullOrWhiteSpace(deliveryData.Address))
         {
-            // Генерация номера заказа
-            orderNumber = $"ORD-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
-
-            // Расчет финальной суммы
-            var deliveryCost = CartService.TotalPrice >= 1500 ? 0 : 200;
-            finalTotal = CartService.TotalPrice + deliveryCost;
-
-            // Создание заказа
-            var order = new Order
+            try
             {
-                OrderNumber = orderNumber,
-                Items = new List<CartItem>(CartService.Items),
-                Name = deliveryData.Name,
-                Phone = deliveryData.Phone,
-                Address = deliveryData.Address,
-                Apartment = deliveryData.Apartment,
-                Comments = deliveryData.Comments,
-                TotalPrice = finalTotal,
-                OrderDate = DateTime.Now
-            };
+                errorMessage = null;
 
-            // Очистка корзины
-            CartService.ClearCart();
+                // 1. Получить или создать пользователя
+                var user = await RestaurantService.GetUserByPhoneAsync(deliveryData.Phone);
+                if (user == null)
+                {
+                    user = await RestaurantService.CreateUserAsync(new User
+                    {
+                        PhoneNum = deliveryData.Phone,
+                        Name = deliveryData.Name
+                    });
+                }
 
-            orderPlaced = true;
+                // 2. Создать заказ с блюдами из корзины
+                var order = new Order
+                {
+                    PhoneNum = deliveryData.Phone,
+                    Address = deliveryData.Address,
+                    Date = DateTime.Now,
+                    DishInOrders = CartService.Items.Select(item => new DishInOrder
+                    {
+                        IdDish = item.IdDish,
+                        Quantity = item.Quantity
+                    }).ToList()
+                };
+
+                // 3. Сохранить заказ в БД
+                var success = await RestaurantService.CreateOrderAsync(order);
+
+                if (!success)
+                {
+                    errorMessage = "Ошибка при сохранении заказа. Пожалуйста, попробуйте снова.";
+                    return;
+                }
+
+                // Генерация номера заказа для отображения
+                orderNumber = $"ORD-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
+
+                // Расчет финальной суммы
+                var deliveryCost = CartService.TotalPrice >= 1500 ? 0 : 200;
+                finalTotal = CartService.TotalPrice + deliveryCost;
+
+                // 4. Очистка корзины после успешного сохранения
+                await CartService.ClearCartAsync();
+
+                orderPlaced = true;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Произошла ошибка: {ex.Message}. Пожалуйста, попробуйте снова.";
+            }
+        }
+        else
+        {
+            errorMessage = "Пожалуйста, заполните все обязательные поля.";
         }
     }
 

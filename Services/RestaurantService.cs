@@ -1,5 +1,4 @@
 ﻿using Restaurant_site.Data;
-using Restaurant_site.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Restaurant_site.Services
@@ -76,6 +75,29 @@ namespace Restaurant_site.Services
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
             return user;
+        }
+
+        public async Task<bool> CheckTableAvailabilityAsync(int tableId, DateTime date)
+        {
+            // Проверяем, нет ли бронирований на этот стол в диапазоне ±2 часа
+            var startTime = date.AddHours(-2);
+            var endTime = date.AddHours(2);
+
+            var existingReservation = await _context.Reservations
+                .AnyAsync(r => r.IdTable == tableId &&
+                              r.Date >= startTime &&
+                              r.Date <= endTime);
+
+            return !existingReservation; // true если стол доступен
+        }
+
+        public async Task<List<Reservation>> GetAllReservationsAsync()
+        {
+            return await _context.Reservations
+                .Include(r => r.User)
+                .Include(r => r.Table)
+                .ThenInclude(t => t.TableType)
+                .ToListAsync();
         }
     }
 }

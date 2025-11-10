@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Restaurant_site.Data;
 using Restaurant_site.Services;
 
 namespace Microsoft.Extensions.DependencyInjection

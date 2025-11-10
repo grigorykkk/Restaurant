@@ -4,4 +4,5 @@
     public Dish Dish { get; set; } = null!;
     public int IdOrder { get; set; }
     public Order Order { get; set; } = null!;
+    public int Quantity { get; set; } = 1;
 }

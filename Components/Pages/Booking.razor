@@ -1,5 +1,7 @@
 @page "/booking"
 @rendermode InteractiveServer
+@using Restaurant_site.Services
+@inject IRestaurantService RestaurantService
 
 <HomeButton />
 
@@ -7,7 +9,7 @@
     <h1 class="restaurant-title">Restaurant</h1>
 
     <div class="content-section">
-        <h2 class="section-title">Booking</h2>
+        <h2 class="section-title">Бронирование</h2>
         <div class="section-content">
             <div class="booking-container">
                     <!-- Переключатель между окнами -->
@@ -29,6 +31,12 @@
                             @if (!isBooked && !showTableSelection)
                             {
                                 <form class="booking-form" @onsubmit="HandleBooking" @onsubmit:preventDefault="true">
+                                    @if (!string.IsNullOrEmpty(errorMessage))
+                                    {
+                                        <div class="error-message" style="color: red; margin-bottom: 15px; padding: 10px; background-color: #ffebee; border-radius: 4px;">
+                                            @errorMessage
+                                        </div>
+                                    }
                                     <div class="form-group">
                                         <label for="name">Ваше имя</label>
                                         <input type="text" id="name" @bind="bookingData.Name" required />
@@ -94,9 +102,9 @@
                                             @foreach (var tableAvailability in availableTables)
                                             {
                                                 <div class="table-card @(tableAvailability.IsAvailableNow ? "available" : "available-later")">
-                                                    <div class="table-number">Столик №@tableAvailability.Table.Id</div>
-                                                    <div class="table-location">@tableAvailability.Table.Location</div>
-                                                    <div class="table-capacity">До @tableAvailability.Table.Capacity персон</div>
+                                                    <div class="table-number">Столик №@tableAvailability.TableId</div>
+                                                    <div class="table-location">@tableAvailability.Location</div>
+                                                    <div class="table-capacity">До @tableAvailability.Capacity персон</div>
                                                     <div class="table-status">
                                                         @if (tableAvailability.IsAvailableNow)
                                                         {
@@ -158,7 +166,7 @@
 
                                     <button type="button" class="submit-button" @onclick="CheckBooking">Проверить бронь</button>
 
-                                    <p style="margin-top: 10px; color: #999; font-size: 14px;">Всего броней: @bookings.Count</p>
+                                    <p style="margin-top: 10px; color: #999; font-size: 14px;">Всего броней: @totalBookingsCount</p>
                                 </div>
 
                                 @if (showNotFound)
@@ -205,6 +213,9 @@
     private bool showTableSelection = false;
     private List<TableAvailability> availableTables = new List<TableAvailability>();
     private string nameCheck = "";
+    private string? errorMessage = null;
+    private List<Table> tables = new List<Table>();
+    private int totalBookingsCount = 0;
 
     private BookingData bookingData = new BookingData
     {
@@ -214,19 +225,14 @@
 
     private BookingData foundBooking = new BookingData();
 
-    // В реальном приложении это будет база данных
-    private static List<BookingData> bookings = new List<BookingData>();
-
-    // Список столиков ресторана (6 столиков)
-    private static readonly List<Table> tables = new List<Table>
+    protected override async Task OnInitializedAsync()
     {
-        new Table { Id = 1, Location = "У окна", Capacity = 2 },
-        new Table { Id = 2, Location = "В глубине зала", Capacity = 2 },
-        new Table { Id = 3, Location = "У окна", Capacity = 4 },
-        new Table { Id = 4, Location = "У прохода", Capacity = 4 },
-        new Table { Id = 5, Location = "В глубине зала", Capacity = 6 },
-        new Table { Id = 6, Location = "У прохода", Capacity = 6 }
-    };
+        // Загружаем столы из БД
+        tables = await RestaurantService.GetTablesAsync();
+
+        // Получаем общее количество бронирований (для отладки)
+        totalBookingsCount = tables.Sum(t => t.Reservations?.Count ?? 0);
+    }
 
     private class BookingData
     {
@@ -240,62 +246,101 @@
         public int TableCapacity { get; set; }
     }
 
-    private class Table
-    {
-        public int Id { get; set; }
-        public string Location { get; set; } = "";
-        public int Capacity { get; set; }
-    }
-
     private class TableAvailability
     {
-        public Table Table { get; set; } = new Table();
+        public int TableId { get; set; }
+        public string Location { get; set; } = "";
+        public int Capacity { get; set; }
         public bool IsAvailableNow { get; set; }
         public bool IsAvailableInOneHour { get; set; }
         public TimeOnly? AvailableAt { get; set; }
     }
 
-    private void HandleBooking()
+    private async Task HandleBooking()
     {
         // Переходим к выбору столика
-        ProceedToTableSelection();
+        await ProceedToTableSelection();
     }
 
-    private void ProceedToTableSelection()
+    private async Task ProceedToTableSelection()
     {
         // Получаем количество гостей
         int guestCount = int.TryParse(bookingData.Guests, out int count) ? count : 6;
 
-        // Получаем доступные столики
-        availableTables = GetAvailableTables(bookingData.Date, bookingData.Time, guestCount);
+        // Получаем доступные столики из БД
+        availableTables = await GetAvailableTables(bookingData.Date, bookingData.Time, guestCount);
 
         // Показываем экран выбора столика
         showTableSelection = true;
     }
 
-    private void SelectTable(TableAvailability tableAvailability)
+    private async Task SelectTable(TableAvailability tableAvailability)
     {
-        // Сохраняем информацию о выбранном столике
-        bookingData.TableId = tableAvailability.Table.Id;
-        bookingData.TableLocation = tableAvailability.Table.Location;
-        bookingData.TableCapacity = tableAvailability.Table.Capacity;
-
-        // Добавляем бронь в список
-        bookings.Add(new BookingData
+        try
         {
-            Name = bookingData.Name,
-            Phone = bookingData.Phone,
-            Date = bookingData.Date,
-            Time = bookingData.Time,
-            Guests = bookingData.Guests,
-            TableId = bookingData.TableId,
-            TableLocation = bookingData.TableLocation,
-            TableCapacity = bookingData.TableCapacity
-        });
+            errorMessage = null;
 
-        // Скрываем выбор столиков и показываем подтверждение
-        showTableSelection = false;
-        isBooked = true;
+            // 1. Проверяем доступность стола
+            var reservationDateTime = bookingData.Date.ToDateTime(bookingData.Time);
+            var isAvailable = await RestaurantService.CheckTableAvailabilityAsync(
+                tableAvailability.TableId,
+                reservationDateTime
+            );
+
+            if (!isAvailable)
+            {
+                errorMessage = "К сожалению, этот столик уже забронирован на выбранное время. Пожалуйста, выберите другой столик или время.";
+                // Обновляем список доступных столиков
+                await ProceedToTableSelection();
+                return;
+            }
+
+            // 2. Получить или создать пользователя
+            var user = await RestaurantService.GetUserByPhoneAsync(bookingData.Phone);
+            if (user == null)
+            {
+                user = await RestaurantService.CreateUserAsync(new User
+                {
+                    PhoneNum = bookingData.Phone,
+                    Name = bookingData.Name
+                });
+            }
+
+            // 3. Создать бронирование
+            var guestCount = int.TryParse(bookingData.Guests, out int count) ? count : 6;
+            var reservation = new Reservation
+            {
+                PhoneNum = bookingData.Phone,
+                Date = reservationDateTime,
+                GuestCount = guestCount,
+                IdTable = tableAvailability.TableId
+            };
+
+            // 4. Сохранить в БД
+            var success = await RestaurantService.CreateReservationAsync(reservation);
+
+            if (!success)
+            {
+                errorMessage = "Ошибка при сохранении бронирования. Пожалуйста, попробуйте снова.";
+                return;
+            }
+
+            // Сохраняем информацию о выбранном столике для отображения
+            bookingData.TableId = tableAvailability.TableId;
+            bookingData.TableLocation = tableAvailability.Location;
+            bookingData.TableCapacity = tableAvailability.Capacity;
+
+            // Обновляем количество бронирований
+            totalBookingsCount++;
+
+            // Скрываем выбор столиков и показываем подтверждение
+            showTableSelection = false;
+            isBooked = true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Произошла ошибка: {ex.Message}. Пожалуйста, попробуйте снова.";
+        }
     }
 
     private void BackToBookingForm()
@@ -315,7 +360,7 @@
         };
     }
 
-    private void CheckBooking()
+    private async Task CheckBooking()
     {
         showNotFound = false;
 
@@ -326,25 +371,53 @@
             return;
         }
 
-        // Ищем бронь по имени И последним 4 цифрам телефона
-        // Извлекаем только цифры из номера телефона для сравнения
-        var booking = bookings.FirstOrDefault(b =>
+        try
         {
-            var phoneDigits = new string(b.Phone.Where(char.IsDigit).ToArray());
-            var checkDigits = new string(phoneCheck.Where(char.IsDigit).ToArray());
-            var phoneMatch = phoneDigits.EndsWith(checkDigits);
-            var nameMatch = b.Name.Equals(nameCheck, StringComparison.OrdinalIgnoreCase);
+            // Получаем все бронирования из БД
+            var allReservations = await RestaurantService.GetAllReservationsAsync();
 
-            return phoneMatch && nameMatch;
-        });
+            // Ищем бронь по имени И последним 4 цифрам телефона
+            var reservation = allReservations.FirstOrDefault(r =>
+            {
+                if (r.User == null) return false;
 
-        if (booking != null)
-        {
-            foundBooking = booking;
-            bookingFound = true;
+                var phoneDigits = new string(r.User.PhoneNum.Where(char.IsDigit).ToArray());
+                var checkDigits = new string(phoneCheck.Where(char.IsDigit).ToArray());
+                var phoneMatch = phoneDigits.EndsWith(checkDigits);
+                var nameMatch = r.User.Name.Equals(nameCheck, StringComparison.OrdinalIgnoreCase);
+
+                return phoneMatch && nameMatch;
+            });
+
+            if (reservation != null)
+            {
+                // Преобразуем Reservation в BookingData для отображения
+                var dateOnly = DateOnly.FromDateTime(reservation.Date);
+                var timeOnly = TimeOnly.FromDateTime(reservation.Date);
+                var location = reservation.Table?.TableType?.Title ?? "Зал";
+
+                foundBooking = new BookingData
+                {
+                    Name = reservation.User?.Name ?? "",
+                    Phone = reservation.User?.PhoneNum ?? "",
+                    Date = dateOnly,
+                    Time = timeOnly,
+                    Guests = reservation.GuestCount.ToString(),
+                    TableId = reservation.IdTable,
+                    TableLocation = location,
+                    TableCapacity = reservation.Table?.SeatsCount ?? 0
+                };
+
+                bookingFound = true;
+            }
+            else
+            {
+                showNotFound = true;
+            }
         }
-        else
+        catch (Exception ex)
         {
+            errorMessage = $"Ошибка при поиске бронирования: {ex.Message}";
             showNotFound = true;
         }
     }
@@ -357,40 +430,48 @@
         showNotFound = false;
     }
 
-    private List<TableAvailability> GetAvailableTables(DateOnly date, TimeOnly time, int guestCount)
+    private async Task<List<TableAvailability>> GetAvailableTables(DateOnly date, TimeOnly time, int guestCount)
     {
         var availableTables = new List<TableAvailability>();
+        var requestedDateTime = date.ToDateTime(time);
+
+        // Обновляем данные таблиц из БД
+        tables = await RestaurantService.GetTablesAsync();
 
         // Проверяем каждый столик
         foreach (var table in tables)
         {
-            // Фильтруем по вместимости - столик должен вмещать количество гостей
-            // Для "6+ гостей" нужен столик на 6 персон
-            int requiredCapacity = guestCount;
-            if (guestCount > 6) requiredCapacity = 6;
+            // Получаем название локации из TableType
+            var location = table.TableType?.Title ?? "Зал";
 
-            if (table.Capacity < requiredCapacity)
+            // Фильтруем по вместимости - столик должен вмещать количество гостей
+            int requiredCapacity = guestCount > 6 ? 6 : guestCount;
+
+            if (table.SeatsCount < requiredCapacity)
                 continue;
 
-            // Проверяем, занят ли столик на это время
-            var conflictingBooking = bookings.FirstOrDefault(b =>
-                b.TableId == table.Id &&
-                b.Date == date &&
-                Math.Abs((b.Time.ToTimeSpan() - time.ToTimeSpan()).TotalMinutes) < 120 // 2 часа на бронь
+            // Проверяем, занят ли столик на это время (±2 часа)
+            var startTime = requestedDateTime.AddHours(-2);
+            var endTime = requestedDateTime.AddHours(2);
+
+            var conflictingReservation = table.Reservations?.FirstOrDefault(r =>
+                r.Date >= startTime && r.Date <= endTime
             );
 
             var availability = new TableAvailability
             {
-                Table = table,
-                IsAvailableNow = conflictingBooking == null,
+                TableId = table.IdTable,
+                Location = location,
+                Capacity = table.SeatsCount,
+                IsAvailableNow = conflictingReservation == null,
                 IsAvailableInOneHour = false,
                 AvailableAt = null
             };
 
             // Если столик занят сейчас, проверяем, освободится ли он через час
-            if (conflictingBooking != null)
+            if (conflictingReservation != null)
             {
-                var bookingEndTime = conflictingBooking.Time.AddHours(2); // Предполагаем, что бронь на 2 часа
+                var bookingEndTime = TimeOnly.FromDateTime(conflictingReservation.Date.AddHours(2));
                 var oneHourLater = time.AddHours(1);
 
                 if (bookingEndTime <= oneHourLater)
@@ -410,7 +491,7 @@
         // Сортируем: сначала доступные сейчас, потом по вместимости
         return availableTables
             .OrderByDescending(t => t.IsAvailableNow)
-            .ThenBy(t => t.Table.Capacity)
+            .ThenBy(t => t.Capacity)
             .ToList();
     }
 }
