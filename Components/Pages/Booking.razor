@@ -12,197 +12,282 @@
         <h2 class="section-title">Бронирование</h2>
         <div class="section-content">
             <div class="booking-container">
-                    <!-- Переключатель между окнами -->
-                    <div class="booking-tabs">
-                        <button type="button" class="tab-button @(activeTab == "create" ? "active" : "")"
-                                @onclick="@(() => { activeTab = "create"; showNotFound = false; StateHasChanged(); })">
-                            Забронировать столик
-                        </button>
-                        <button type="button" class="tab-button @(activeTab == "check" ? "active" : "")"
-                                @onclick="@(() => { activeTab = "check"; showNotFound = false; StateHasChanged(); })">
-                            Проверить бронь
-                        </button>
-                    </div>
+                <!-- Переключатель между окнами -->
+                <div class="booking-tabs">
+                    <button type="button" class="tab-button @(activeTab == "create" ? "active" : "")"
+                            @onclick="@(() => { activeTab = "create"; showNotFound = false; ClearErrors(); StateHasChanged(); })">
+                        Забронировать столик
+                    </button>
+                    <button type="button" class="tab-button @(activeTab == "check" ? "active" : "")"
+                            @onclick="@(() => { activeTab = "check"; showNotFound = false; ClearErrors(); StateHasChanged(); })">
+                        Проверить бронь
+                    </button>
+                </div>
 
-                    <!-- Окно 1: Забронировать столик -->
-                    @if (activeTab == "create")
-                    {
-                        <div class="tab-content">
-                            @if (!isBooked && !showTableSelection)
-                            {
-                                <form class="booking-form" @onsubmit="HandleBooking" @onsubmit:preventDefault="true">
-                                    @if (!string.IsNullOrEmpty(errorMessage))
-                                    {
-                                        <div class="error-message" style="color: red; margin-bottom: 15px; padding: 10px; background-color: #ffebee; border-radius: 4px;">
-                                            @errorMessage
-                                        </div>
-                                    }
-                                    <div class="form-group">
-                                        <label for="name">Ваше имя</label>
-                                        <input type="text" id="name" @bind="bookingData.Name" required />
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="phone">Телефон</label>
-                                        <input type="tel" id="phone" @bind="bookingData.Phone"
-                                               placeholder="+7 (___) ___-__-__" required />
-                                    </div>
-
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label for="date">Дата</label>
-                                            <input type="date" id="date" @bind="bookingData.Date" required />
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label for="time">Время</label>
-                                            <input type="time" id="time" @bind="bookingData.Time" required />
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="guests">Количество гостей</label>
-                                        <select id="guests" @bind="bookingData.Guests" required>
-                                            <option value="">Выберите...</option>
-                                            <option value="1">1 гость</option>
-                                            <option value="2">2 гостя</option>
-                                            <option value="3">3 гостя</option>
-                                            <option value="4">4 гостя</option>
-                                            <option value="5">5 гостей</option>
-                                            <option value="6">6+ гостей</option>
-                                        </select>
-                                    </div>
-
-                                    <button type="submit" class="submit-button">Выбрать столик</button>
-                                </form>
-                            }
-                            else if (showTableSelection)
-                            {
-                                <div class="table-selection">
-                                    <h3>Выберите столик</h3>
-                                    <p style="margin-bottom: 20px; color: #666;">
-                                        Дата: @bookingData.Date.ToString("dd.MM.yyyy") |
-                                        Время: @bookingData.Time.ToString("HH:mm") |
-                                        Гостей: @bookingData.Guests
-                                    </p>
-
-                                    @if (availableTables.Count == 0)
-                                    {
-                                        <div class="error-message">
-                                            <p>К сожалению, на выбранное время нет доступных столиков.</p>
-                                            <p>Попробуйте выбрать другое время.</p>
-                                        </div>
-                                        <button class="submit-button" @onclick="BackToBookingForm" style="margin-top: 15px;">
-                                            Вернуться назад
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <div class="tables-grid">
-                                            @foreach (var tableAvailability in availableTables)
-                                            {
-                                                <div class="table-card @(tableAvailability.IsAvailableNow ? "available" : "available-later")">
-                                                    <div class="table-number">Столик №@tableAvailability.TableId</div>
-                                                    <div class="table-location">@tableAvailability.Location</div>
-                                                    <div class="table-capacity">До @tableAvailability.Capacity персон</div>
-                                                    <div class="table-status">
-                                                        @if (tableAvailability.IsAvailableNow)
-                                                        {
-                                                            <span class="status-badge available">✓ Свободен</span>
-                                                        }
-                                                        else if (tableAvailability.IsAvailableInOneHour)
-                                                        {
-                                                            <span class="status-badge later">
-                                                                Свободен с @tableAvailability.AvailableAt?.ToString("HH:mm")
-                                                            </span>
-                                                        }
-                                                    </div>
-                                                    <button class="table-select-btn" @onclick="() => SelectTable(tableAvailability)">
-                                                        Выбрать
-                                                    </button>
-                                                </div>
-                                            }
-                                        </div>
-                                        <button class="submit-button secondary" @onclick="BackToBookingForm" style="margin-top: 20px;">
-                                            Вернуться назад
-                                        </button>
-                                    }
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="success-message">
-                                    <h3>Бронирование подтверждено!</h3>
-                                    <p>Имя: @bookingData.Name</p>
-                                    <p>Телефон: @bookingData.Phone</p>
-                                    <p>Дата: @bookingData.Date.ToString("dd.MM.yyyy")</p>
-                                    <p>Время: @bookingData.Time.ToString("HH:mm")</p>
-                                    <p>Количество гостей: @bookingData.Guests</p>
-                                    <p>Столик №@bookingData.TableId (@bookingData.TableLocation, до @bookingData.TableCapacity персон)</p>
-                                    <p class="booking-code">Код брони: ваше имя + последние 4 цифры телефона</p>
-                                    <p>Мы ждем вас! В случае изменений, пожалуйста, позвоните нам.</p>
-                                    <button class="submit-button" @onclick="ResetBooking">Создать новую бронь</button>
-                                </div>
-                            }
-                        </div>
-                    }
-                    else if (activeTab == "check")
-                    {
-                        <div class="tab-content">
-                            @if (!bookingFound)
-                            {
-                                <div class="booking-form">
-                                    <div class="form-group">
-                                        <label for="checkName">Ваше имя</label>
-                                        <input type="text" id="checkName" @bind-value="nameCheck" @bind-value:event="oninput"
-                                               placeholder="Введите имя" required />
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="checkPhone">Последние 4 цифры телефона</label>
-                                        <input type="text" id="checkPhone" @bind-value="phoneCheck" @bind-value:event="oninput"
-                                               placeholder="____" maxlength="4" required />
-                                    </div>
-
-                                    <button type="button" class="submit-button" @onclick="CheckBooking">Проверить бронь</button>
-
-                                    <p style="margin-top: 10px; color: #999; font-size: 14px;">Всего броней: @totalBookingsCount</p>
-                                </div>
-
-                                @if (showNotFound)
+                <!-- Окно 1: Забронировать столик -->
+                @if (activeTab == "create")
+                {
+                    <div class="tab-content">
+                        @if (!isBooked && !showTableSelection)
+                        {
+                            <form class="booking-form" @onsubmit="HandleBooking" @onsubmit:preventDefault="true">
+                                @if (!string.IsNullOrEmpty(errorMessage))
                                 {
                                     <div class="error-message">
-                                        <p>Бронь не найдена. Проверьте правильность введенных данных.</p>
-                                        <p style="font-size: 12px;">Имя: "@nameCheck", Телефон (последние 4 цифры): "@phoneCheck"</p>
+                                        @errorMessage
                                     </div>
                                 }
-                            }
-                            else
-                            {
-                                <div class="success-message">
-                                    <h3>Информация о брони</h3>
-                                    <p>Имя: @foundBooking.Name</p>
-                                    <p>Телефон: @foundBooking.Phone</p>
-                                    <p>Дата: @foundBooking.Date.ToString("dd.MM.yyyy")</p>
-                                    <p>Время: @foundBooking.Time.ToString("HH:mm")</p>
-                                    <p>Количество гостей: @foundBooking.Guests</p>
-                                    @if (foundBooking.TableId > 0)
+
+                                <!-- Поле имени -->
+                                <div class="form-group">
+                                    <label for="name">Ваше имя</label>
+                                    <input type="text" id="name" @bind="bookingData.Name"
+                                           @oninput="@((e) => OnNameInput(e))"
+                                           class="@(fieldErrors.ContainsKey("name") ? "input-error" : "")" />
+                                    @if (fieldErrors.ContainsKey("name"))
                                     {
-                                        <p>Столик №@foundBooking.TableId (@foundBooking.TableLocation, до @foundBooking.TableCapacity персон)</p>
+                                        <div class="field-error">@fieldErrors["name"]</div>
                                     }
-                                    <button class="submit-button" @onclick="ResetCheck">Проверить другую бронь</button>
+                                </div>
+
+                                <!-- Поле телефона -->
+                                <div class="form-group">
+                                    <label for="phone">Телефон</label>
+                                    <input type="tel" id="phone" @bind="bookingData.Phone"
+                                           @oninput="@((e) => OnPhoneInput(e))"
+                                           @onblur="@ValidatePhone"
+                                           placeholder="+7 (___) ___-__-__"
+                                           class="@(fieldErrors.ContainsKey("phone") ? "input-error" : "")" />
+                                    @if (fieldErrors.ContainsKey("phone"))
+                                    {
+                                        <div class="field-error">@fieldErrors["phone"]</div>
+                                    }
+                                    <div class="hint">Формат: +7 (XXX) XXX-XX-XX</div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="date">Дата</label>
+                                        <input type="date" id="date" @bind="bookingData.Date"
+                                               min="@minDate" max="@maxDate"
+                                               class="@(fieldErrors.ContainsKey("date") ? "input-error" : "")" />
+                                        @if (fieldErrors.ContainsKey("date"))
+                                        {
+                                            <div class="field-error">@fieldErrors["date"]</div>
+                                        }
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="time">Время</label>
+                                        <input type="time" id="time" @bind="bookingData.Time"
+                                               min="10:00" max="23:00"
+                                               class="@(fieldErrors.ContainsKey("time") ? "input-error" : "")" />
+                                        @if (fieldErrors.ContainsKey("time"))
+                                        {
+                                            <div class="field-error">@fieldErrors["time"]</div>
+                                        }
+                                        <div class="hint">Время работы: 10:00 - 23:00</div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="guests">Количество гостей</label>
+                                    <select id="guests" @bind="bookingData.Guests"
+                                            class="@(fieldErrors.ContainsKey("guests") ? "input-error" : "")">
+                                        <option value="">Выберите...</option>
+                                        <option value="1">1 гость</option>
+                                        <option value="2">2 гостя</option>
+                                        <option value="3">3 гостя</option>
+                                        <option value="4">4 гостя</option>
+                                        <option value="5">5 гостей</option>
+                                        <option value="6">6+ гостей</option>
+                                    </select>
+                                    @if (fieldErrors.ContainsKey("guests"))
+                                    {
+                                        <div class="field-error">@fieldErrors["guests"]</div>
+                                    }
+                                </div>
+
+                                <button type="submit" class="submit-button" disabled="@(!IsFormValid())">Выбрать столик</button>
+                            </form>
+                        }
+                        else if (showTableSelection)
+                        {
+                            <div class="table-selection">
+                                <h3>Выберите столик</h3>
+                                <p style="margin-bottom: 20px; color: #666;">
+                                    Дата: @bookingData.Date.ToString("dd.MM.yyyy") |
+                                    Время: @bookingData.Time.ToString("HH:mm") |
+                                    Гостей: @bookingData.Guests
+                                </p>
+
+                                @if (availableTables.Count == 0)
+                                {
+                                    <div class="error-message">
+                                        <p>К сожалению, на выбранное время нет доступных столиков.</p>
+                                        <p>Попробуйте выбрать другое время.</p>
+                                    </div>
+                                    <button class="submit-button" @onclick="BackToBookingForm" style="margin-top: 15px;">
+                                        Вернуться назад
+                                    </button>
+                                }
+                                else
+                                {
+                                    <div class="tables-grid">
+                                        @foreach (var tableAvailability in availableTables)
+                                        {
+                                            <div class="table-card @(tableAvailability.IsAvailableNow ? "available" : "available-later")">
+                                                <div class="table-number">Столик №@tableAvailability.TableId</div>
+                                                <div class="table-location">@tableAvailability.Location</div>
+                                                <div class="table-capacity">До @tableAvailability.Capacity персон</div>
+                                                <div class="table-status">
+                                                    @if (tableAvailability.IsAvailableNow)
+                                                    {
+                                                        <span class="status-badge available">✓ Свободен</span>
+                                                    }
+                                                    else if (tableAvailability.IsAvailableInOneHour)
+                                                    {
+                                                        <span class="status-badge later">
+                                                            Свободен с @tableAvailability.AvailableAt?.ToString("HH:mm")
+                                                        </span>
+                                                    }
+                                                </div>
+                                                <button class="table-select-btn" @onclick="() => SelectTable(tableAvailability)">
+                                                    Выбрать
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
+                                    <button class="submit-button secondary" @onclick="BackToBookingForm" style="margin-top: 20px;">
+                                        Вернуться назад
+                                    </button>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="success-message">
+                                <h3>Бронирование подтверждено!</h3>
+                                <p>Имя: @bookingData.Name</p>
+                                <p>Телефон: @FormatPhoneForDisplay(bookingData.Phone)</p>
+                                <p>Дата: @bookingData.Date.ToString("dd.MM.yyyy")</p>
+                                <p>Время: @bookingData.Time.ToString("HH:mm")</p>
+                                <p>Количество гостей: @bookingData.Guests</p>
+                                <p>Столик №@bookingData.TableId (@bookingData.TableLocation, до @bookingData.TableCapacity персон)</p>
+                                <p class="booking-code">Код брони: @bookingData.Name.ToUpper()@(new string(bookingData.Phone.Where(char.IsDigit).ToArray()).Substring(7))</p>
+                                <p>Мы ждем вас! В случае изменений, пожалуйста, позвоните нам.</p>
+                                <button class="submit-button" @onclick="ResetBooking">Создать новую бронь</button>
+                            </div>
+                        }
+                    </div>
+                }
+                else if (activeTab == "check")
+                {
+                    <div class="tab-content">
+                        @if (!bookingFound)
+                        {
+                            <div class="booking-form">
+                                <div class="form-group">
+                                    <label for="checkName">Ваше имя</label>
+                                    <input type="text" id="checkName" @bind-value="nameCheck" @bind-value:event="oninput"
+                                           placeholder="Введите имя"
+                                           class="@(fieldErrors.ContainsKey("checkName") ? "input-error" : "")" />
+                                    @if (fieldErrors.ContainsKey("checkName"))
+                                    {
+                                        <div class="field-error">@fieldErrors["checkName"]</div>
+                                    }
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="checkPhone">Последние 4 цифры телефона</label>
+                                    <input type="text" id="checkPhone" @bind-value="phoneCheck" @bind-value:event="oninput"
+                                           placeholder="____" maxlength="4"
+                                           class="@(fieldErrors.ContainsKey("checkPhone") ? "input-error" : "")" />
+                                    @if (fieldErrors.ContainsKey("checkPhone"))
+                                    {
+                                        <div class="field-error">@fieldErrors["checkPhone"]</div>
+                                    }
+                                </div>
+
+                                <button type="button" class="submit-button" @onclick="CheckBooking"
+                                        disabled="@(!IsCheckFormValid())">
+                                    Проверить бронь
+                                </button>
+
+                                <p style="margin-top: 10px; color: #999; font-size: 14px;">Всего броней: @totalBookingsCount</p>
+                            </div>
+
+                            @if (showNotFound)
+                            {
+                                <div class="error-message">
+                                    <p>Бронь не найдена. Проверьте правильность введенных данных.</p>
+                                    <p style="font-size: 12px;">Имя: "@nameCheck", Телефон (последние 4 цифры): "@phoneCheck"</p>
                                 </div>
                             }
-                        </div>
-                    }
-                </div>
+                        }
+                        else
+                        {
+                            <div class="success-message">
+                                <h3>Информация о брони</h3>
+                                <p>Имя: @foundBooking.Name</p>
+                                <p>Телефон: @FormatPhoneForDisplay(foundBooking.Phone)</p>
+                                <p>Дата: @foundBooking.Date.ToString("dd.MM.yyyy")</p>
+                                <p>Время: @foundBooking.Time.ToString("HH:mm")</p>
+                                <p>Количество гостей: @foundBooking.Guests</p>
+                                @if (foundBooking.TableId > 0)
+                                {
+                                    <p>Столик №@foundBooking.TableId (@foundBooking.TableLocation, до @foundBooking.TableCapacity персон)</p>
+                                }
+                                <button class="submit-button" @onclick="ResetCheck">Проверить другую бронь</button>
+                            </div>
+                        }
+                    </div>
+                }
             </div>
+        </div>
     </div>
 </div>
 
 <div class="navigation-container">
     <Navigation />
 </div>
+
+<style>
+    .input-error {
+        border-color: #dc3545 !important;
+        background-color: #fff5f5;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .field-error {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 4px;
+        font-weight: 500;
+    }
+
+    .submit-button:disabled {
+        background-color: #6c757d !important;
+        cursor: not-allowed !important;
+        opacity: 0.6 !important;
+        transform: none !important;
+    }
+
+        .submit-button:disabled:hover {
+            background-color: #6c757d !important;
+            transform: none !important;
+        }
+
+    .error-message {
+        color: #dc3545;
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 4px;
+        padding: 12px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }    
+</style>
 
 @code {
     private string activeTab = "create";
@@ -217,6 +302,11 @@
     private List<Table> tables = new List<Table>();
     private int totalBookingsCount = 0;
 
+    // Валидация
+    private Dictionary<string, string> fieldErrors = new Dictionary<string, string>();
+    private string minDate = DateTime.Today.ToString("yyyy-MM-dd");
+    private string maxDate = DateTime.Today.AddMonths(3).ToString("yyyy-MM-dd");
+
     private BookingData bookingData = new BookingData
     {
         Date = DateOnly.FromDateTime(DateTime.Today.AddDays(1)),
@@ -227,10 +317,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Загружаем столы из БД
         tables = await RestaurantService.GetTablesAsync();
-
-        // Получаем общее количество бронирований (для отладки)
         totalBookingsCount = tables.Sum(t => t.Reservations?.Count ?? 0);
     }
 
@@ -256,8 +343,256 @@
         public TimeOnly? AvailableAt { get; set; }
     }
 
+    // ========== ВАЛИДАЦИЯ ==========
+
+    private void ClearErrors()
+    {
+        fieldErrors.Clear();
+        errorMessage = null;
+    }
+
+    private void AddFieldError(string fieldName, string message)
+    {
+        fieldErrors[fieldName] = message;
+    }
+
+    private void RemoveFieldError(string fieldName)
+    {
+        if (fieldErrors.ContainsKey(fieldName))
+        {
+            fieldErrors.Remove(fieldName);
+        }
+    }
+
+    // Валидация имени
+    private void OnNameInput(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? "";
+        bookingData.Name = value;
+
+        RemoveFieldError("name");
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            AddFieldError("name", "Имя обязательно для заполнения");
+        }
+        else if (value.Length < 2)
+        {
+            AddFieldError("name", "Имя должно содержать минимум 2 символа");
+        }
+        else if (value.Length > 50)
+        {
+            AddFieldError("name", "Имя не должно превышать 50 символов");
+        }
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(value, @"^[a-zA-Zа-яА-ЯёЁ\s\-]+$"))
+        {
+            AddFieldError("name", "Имя может содержать только буквы, пробелы и дефисы");
+        }
+    }
+
+    // Валидация телефона
+    private void OnPhoneInput(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? "";
+
+        // Автоматическое форматирование телефона
+        var formattedPhone = FormatPhoneInput(value);
+        bookingData.Phone = formattedPhone;
+
+        RemoveFieldError("phone");
+
+        // Базовая валидация длины
+        var digitsOnly = new string(formattedPhone.Where(char.IsDigit).ToArray());
+        if (digitsOnly.Length < 11 && digitsOnly.Length > 0)
+        {
+            AddFieldError("phone", "Номер телефона должен содержать 11 цифр");
+        }
+    }
+
+    private void ValidatePhone()
+    {
+        RemoveFieldError("phone");
+
+        if (string.IsNullOrWhiteSpace(bookingData.Phone))
+        {
+            AddFieldError("phone", "Телефон обязателен для заполнения");
+            return;
+        }
+
+        var digitsOnly = new string(bookingData.Phone.Where(char.IsDigit).ToArray());
+
+        // Проверка длины
+        if (digitsOnly.Length != 11)
+        {
+            AddFieldError("phone", "Номер телефона должен содержать 11 цифр");
+            return;
+        }
+
+        // Проверка кода страны
+        if (!digitsOnly.StartsWith("7"))
+        {
+            AddFieldError("phone", "Номер должен начинаться с 7 (Россия)");
+            return;
+        }
+
+        // Проверка формата
+        if (!IsValidPhoneFormat(bookingData.Phone))
+        {
+            AddFieldError("phone", "Неверный формат номера телефона");
+        }
+    }
+
+    // Валидация даты и времени
+    private void ValidateDateTime()
+    {
+        RemoveFieldError("date");
+        RemoveFieldError("time");
+
+        // Проверка даты
+        if (bookingData.Date < DateOnly.FromDateTime(DateTime.Today))
+        {
+            AddFieldError("date", "Дата не может быть в прошлом");
+        }
+        else if (bookingData.Date > DateOnly.FromDateTime(DateTime.Today.AddMonths(3)))
+        {
+            AddFieldError("date", "Бронирование возможно не более чем за 3 месяца");
+        }
+
+        // Проверка времени
+        var minTime = new TimeOnly(10, 0);
+        var maxTime = new TimeOnly(23, 0);
+
+        if (bookingData.Time < minTime || bookingData.Time > maxTime)
+        {
+            AddFieldError("time", "Время работы ресторана: 10:00 - 23:00");
+        }
+
+        // Проверка что дата и время не в прошлом
+        var selectedDateTime = bookingData.Date.ToDateTime(bookingData.Time);
+        if (selectedDateTime < DateTime.Now)
+        {
+            AddFieldError("date", "Выбранное время уже прошло");
+            AddFieldError("time", "Выбранное время уже прошло");
+        }
+    }
+
+    // Валидация количества гостей
+    private void ValidateGuests()
+    {
+        RemoveFieldError("guests");
+
+        if (string.IsNullOrEmpty(bookingData.Guests))
+        {
+            AddFieldError("guests", "Выберите количество гостей");
+        }
+    }
+
+    // Валидация формы проверки брони
+    private void ValidateCheckForm()
+    {
+        RemoveFieldError("checkName");
+        RemoveFieldError("checkPhone");
+
+        if (string.IsNullOrWhiteSpace(nameCheck))
+        {
+            AddFieldError("checkName", "Введите имя для поиска");
+        }
+
+        if (string.IsNullOrWhiteSpace(phoneCheck))
+        {
+            AddFieldError("checkPhone", "Введите последние 4 цифры телефона");
+        }
+        else if (phoneCheck.Length != 4 || !phoneCheck.All(char.IsDigit))
+        {
+            AddFieldError("checkPhone", "Введите ровно 4 цифры");
+        }
+    }
+
+    // Проверка валидности основной формы
+    private bool IsFormValid()
+    {
+        ValidateDateTime();
+        ValidateGuests();
+
+        return string.IsNullOrWhiteSpace(bookingData.Name) == false &&
+               string.IsNullOrWhiteSpace(bookingData.Phone) == false &&
+               string.IsNullOrWhiteSpace(bookingData.Guests) == false &&
+               fieldErrors.Count == 0;
+    }
+
+    // Проверка валидности формы проверки
+    private bool IsCheckFormValid()
+    {
+        return !string.IsNullOrWhiteSpace(nameCheck) &&
+               !string.IsNullOrWhiteSpace(phoneCheck) &&
+               phoneCheck.Length == 4 &&
+               phoneCheck.All(char.IsDigit);
+    }
+
+    // ========== ФОРМАТИРОВАНИЕ ТЕЛЕФОНА ==========
+
+    private string FormatPhoneInput(string input)
+    {
+        // Удаляем все нецифровые символы
+        var digits = new string(input.Where(char.IsDigit).ToArray());
+
+        // Если первый символ 8, заменяем на 7
+        if (digits.StartsWith("8") && digits.Length > 0)
+        {
+            digits = "7" + digits.Substring(1);
+        }
+
+        // Ограничиваем длину
+        if (digits.Length > 11)
+        {
+            digits = digits.Substring(0, 11);
+        }
+
+        // Форматируем по шаблону
+        if (digits.Length == 0) return "";
+        if (digits.Length == 1) return $"+7 ({digits}";
+        if (digits.Length <= 4) return $"+7 ({digits.Substring(1)}";
+        if (digits.Length <= 7) return $"+7 ({digits.Substring(1, 3)}) {digits.Substring(4)}";
+        if (digits.Length <= 9) return $"+7 ({digits.Substring(1, 3)}) {digits.Substring(4, 3)}-{digits.Substring(7)}";
+
+        return $"+7 ({digits.Substring(1, 3)}) {digits.Substring(4, 3)}-{digits.Substring(7, 2)}-{digits.Substring(9)}";
+    }
+
+    private bool IsValidPhoneFormat(string phone)
+    {
+        // Проверяем соответствие формату +7 (XXX) XXX-XX-XX
+        var pattern = @"^\+7\s\(\d{3}\)\s\d{3}-\d{2}-\d{2}$";
+        return System.Text.RegularExpressions.Regex.IsMatch(phone, pattern);
+    }
+
+    private string FormatPhoneForDisplay(string phone)
+    {
+        if (string.IsNullOrWhiteSpace(phone)) return "";
+
+        var digits = new string(phone.Where(char.IsDigit).ToArray());
+        if (digits.Length != 11) return phone;
+
+        return $"+7 ({digits.Substring(1, 3)}) {digits.Substring(4, 3)}-{digits.Substring(7, 2)}-{digits.Substring(9)}";
+    }
+
+    // ========== ОСНОВНЫЕ МЕТОДЫ ==========
+
     private async Task HandleBooking()
     {
+        ClearErrors();
+
+        // Валидация всех полей
+        OnNameInput(new ChangeEventArgs { Value = bookingData.Name });
+        ValidatePhone();
+        ValidateDateTime();
+        ValidateGuests();
+
+        if (fieldErrors.Count > 0)
+        {
+            errorMessage = "Пожалуйста, исправьте ошибки в форме";
+            return;
+        }
+
         // Переходим к выбору столика
         await ProceedToTableSelection();
     }
@@ -358,25 +693,24 @@
             Date = DateOnly.FromDateTime(DateTime.Today.AddDays(1)),
             Time = new TimeOnly(19, 0)
         };
+        ClearErrors();
     }
 
     private async Task CheckBooking()
     {
-        showNotFound = false;
+        ClearErrors();
+        ValidateCheckForm();
 
-        // Проверяем, что оба поля заполнены
-        if (string.IsNullOrWhiteSpace(nameCheck) || string.IsNullOrWhiteSpace(phoneCheck))
+        if (fieldErrors.Count > 0)
         {
-            showNotFound = true;
             return;
         }
 
+        showNotFound = false;
+
         try
         {
-            // Получаем все бронирования из БД
             var allReservations = await RestaurantService.GetAllReservationsAsync();
-
-            // Ищем бронь по имени И последним 4 цифрам телефона
             var reservation = allReservations.FirstOrDefault(r =>
             {
                 if (r.User == null) return false;
@@ -391,7 +725,6 @@
 
             if (reservation != null)
             {
-                // Преобразуем Reservation в BookingData для отображения
                 var dateOnly = DateOnly.FromDateTime(reservation.Date);
                 var timeOnly = TimeOnly.FromDateTime(reservation.Date);
                 var location = reservation.Table?.TableType?.Title ?? "Зал";
@@ -428,6 +761,7 @@
         phoneCheck = "";
         nameCheck = "";
         showNotFound = false;
+        ClearErrors();
     }
 
     private async Task<List<TableAvailability>> GetAvailableTables(DateOnly date, TimeOnly time, int guestCount)

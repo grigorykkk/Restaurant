@@ -1,25 +1,31 @@
 {
   "format": 1,
   "restore": {
-    "/Users/grigory/RiderProjects/Restaurant site/Restaurant site.csproj": {}
+    "C:\\Git\\Restaurant\\Restaurant site.csproj": {}
   },
   "projects": {
-    "/Users/grigory/RiderProjects/Restaurant site/Restaurant site.csproj": {
+    "C:\\Git\\Restaurant\\Restaurant site.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/grigory/RiderProjects/Restaurant site/Restaurant site.csproj",
+        "projectUniqueName": "C:\\Git\\Restaurant\\Restaurant site.csproj",
         "projectName": "Restaurant_site",
-        "projectPath": "/Users/grigory/RiderProjects/Restaurant site/Restaurant site.csproj",
-        "packagesPath": "/Users/grigory/.nuget/packages/",
-        "outputPath": "/Users/grigory/RiderProjects/Restaurant site/obj/",
+        "projectPath": "C:\\Git\\Restaurant\\Restaurant site.csproj",
+        "packagesPath": "C:\\Users\\Manfred-PC\\.nuget\\packages\\",
+        "outputPath": "C:\\Git\\Restaurant\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/Users/grigory/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Manfred-PC\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -80,7 +86,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/Users/grigory/.dotnet/sdk/9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
