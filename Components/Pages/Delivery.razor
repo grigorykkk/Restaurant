@@ -4,6 +4,7 @@
 @inject CartService CartService
 @inject IRestaurantService RestaurantService
 @inject NavigationManager NavigationManager
+@implements IDisposable
 
 <HomeButton />
 
@@ -29,7 +30,7 @@
                     <div class="delivery-form-section">
                         @if (!orderPlaced)
                         {
-                            @if (CartService.Items.Count == 0)
+                            @if (cartItems.Count == 0)
                             {
                                 <div class="empty-cart-message">
                                     <p>Корзина пуста. Сначала выберите блюда из меню.</p>
@@ -48,7 +49,7 @@
                                         </button>
                                     </div>
                                     <div class="order-summary-items">
-                                        @foreach (var item in CartService.Items)
+                                        @foreach (var item in cartItems)
                                         {
                                             <div class="order-summary-item">
                                                 <span class="item-name">@item.Dish.Title</span>
@@ -59,9 +60,9 @@
                                     </div>
                                     <div class="order-summary-total">
                                         <span>Итого:</span>
-                                        <span class="total-price">@CartService.TotalPrice ₽</span>
+                                        <span class="total-price">@totalPrice ₽</span>
                                     </div>
-                                    @if (CartService.TotalPrice >= 1500)
+                                    @if (totalPrice >= 1500)
                                     {
                                         <div class="delivery-cost free">
                                             <span>Доставка:</span>
@@ -76,7 +77,7 @@
                                         </div>
                                         <div class="order-summary-total">
                                             <span>К оплате:</span>
-                                            <span class="total-price">@(CartService.TotalPrice + 200) ₽</span>
+                                            <span class="total-price">@(totalPrice + 200) ₽</span>
                                         </div>
                                     }
                                 </div>
@@ -142,6 +143,9 @@
     private decimal finalTotal = 0;
     private string? errorMessage = null;
 
+    private List<CartItem> cartItems = new();
+    private decimal totalPrice = 0;
+
     private DeliveryData deliveryData = new DeliveryData();
 
     private class DeliveryData
@@ -153,14 +157,25 @@
         public string Comments { get; set; } = "";
     }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         CartService.CartChanged += OnCartChanged;
+        await UpdateCartStateAsync();
     }
 
     private void OnCartChanged()
     {
-        StateHasChanged();
+        _ = InvokeAsync(async () =>
+        {
+            await UpdateCartStateAsync();
+            StateHasChanged();
+        });
+    }
+
+    private async Task UpdateCartStateAsync()
+    {
+        cartItems = await CartService.GetItemsAsync();
+        totalPrice = await CartService.GetTotalPriceAsync();
     }
 
     private void GoToMenu()
@@ -195,7 +210,7 @@
                     PhoneNum = deliveryData.Phone,
                     Address = deliveryData.Address,
                     Date = DateTime.Now,
-                    DishInOrders = CartService.Items.Select(item => new DishInOrder
+                    DishInOrders = cartItems.Select(item => new DishInOrder
                     {
                         IdDish = item.IdDish,
                         Quantity = item.Quantity
@@ -215,8 +230,8 @@
                 orderNumber = $"ORD-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
 
                 // Расчет финальной суммы
-                var deliveryCost = CartService.TotalPrice >= 1500 ? 0 : 200;
-                finalTotal = CartService.TotalPrice + deliveryCost;
+                var deliveryCost = totalPrice >= 1500 ? 0 : 200;
+                finalTotal = totalPrice + deliveryCost;
 
                 // 4. Очистка корзины после успешного сохранения
                 await CartService.ClearCartAsync();

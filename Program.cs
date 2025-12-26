@@ -12,6 +12,9 @@ builder.Services.AddRazorComponents()
 // Database
 builder.Services.AddDatabaseServices(builder.Configuration);
 
+// Add Protected Browser Storage for session persistence
+builder.Services.AddProtectedBrowserStorage();
+
 // Register application services
 builder.Services.AddScoped<MenuService>();
 builder.Services.AddScoped<CartService>();
@@ -24,7 +27,8 @@ var app = builder.Build();
 // Initialize database
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+    using var context = factory.CreateDbContext();
     await DataSeeder.Initialize(context);
 }
 

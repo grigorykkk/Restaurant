@@ -1,46 +1,40 @@
 using Microsoft.EntityFrameworkCore;
+using Restaurant_site.Data;
 
 namespace Restaurant_site.Services;
 
 public class CartService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IDbContextFactory<ApplicationDbContext> _factory;
     private string _sessionId = Guid.NewGuid().ToString();
-    private List<CartItem> _cachedItems = new();
 
     public const decimal MinOrderAmount = 500; // Минимальная сумма заказа
 
     public event Action? CartChanged;
 
-    public CartService(ApplicationDbContext context)
+    public CartService(IDbContextFactory<ApplicationDbContext> factory)
     {
-        _context = context;
+        _factory = factory;
     }
-
-    // Синхронные свойства для использования в Razor компонентах
-    public List<CartItem> Items
-    {
-        get
-        {
-            _cachedItems = GetItemsAsync().GetAwaiter().GetResult();
-            return _cachedItems;
-        }
-    }
-
-    public int TotalItems => GetTotalItemsAsync().GetAwaiter().GetResult();
-
-    public decimal TotalPrice => GetTotalPriceAsync().GetAwaiter().GetResult();
-
-    public bool IsMinOrderAmountMet => IsMinOrderAmountMetAsync().GetAwaiter().GetResult();
 
     public void SetSessionId(string sessionId)
     {
-        _sessionId = sessionId;
+        if (_sessionId != sessionId)
+        {
+            _sessionId = sessionId;
+            // Notify components that the session has changed, forcing a reload of data
+            CartChanged?.Invoke();
+        }
     }
 
-    private async Task<Cart> GetOrCreateCartAsync()
+    public string GetSessionId()
     {
-        var cart = await _context.Carts
+        return _sessionId;
+    }
+
+    private async Task<Cart> GetOrCreateCartAsync(ApplicationDbContext context)
+    {
+        var cart = await context.Carts
             .Include(c => c.CartItems)
             .ThenInclude(ci => ci.Dish)
             .ThenInclude(d => d.DishType)
@@ -54,8 +48,8 @@ public class CartService
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
-            _context.Carts.Add(cart);
-            await _context.SaveChangesAsync();
+            context.Carts.Add(cart);
+            await context.SaveChangesAsync();
         }
 
         return cart;
@@ -63,7 +57,8 @@ public class CartService
 
     public async Task<List<CartItem>> GetItemsAsync()
     {
-        var cart = await GetOrCreateCartAsync();
+        using var context = await _factory.CreateDbContextAsync();
+        var cart = await GetOrCreateCartAsync(context);
         return cart.CartItems.ToList();
     }
 
@@ -87,7 +82,8 @@ public class CartService
 
     public async Task AddToCartAsync(Dish dish, int quantity = 1)
     {
-        var cart = await GetOrCreateCartAsync();
+        using var context = await _factory.CreateDbContextAsync();
+        var cart = await GetOrCreateCartAsync(context);
         var existingItem = cart.CartItems.FirstOrDefault(item => item.IdDish == dish.IdDish);
 
         if (existingItem != null)
@@ -100,28 +96,31 @@ public class CartService
             {
                 IdCart = cart.IdCart,
                 IdDish = dish.IdDish,
-                Dish = dish,
+                Dish = null, // To avoid tracking issues with detached entity
                 Quantity = quantity,
                 AddedAt = DateTime.Now
             };
-            _context.CartItems.Add(newItem);
+            // Ensure we don't try to add a duplicate tracked entity if Dish is tracked elsewhere
+            // Better to just set IDs for new item
+            context.CartItems.Add(newItem);
         }
 
         cart.UpdatedAt = DateTime.Now;
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
         CartChanged?.Invoke();
     }
 
     public async Task RemoveFromCartAsync(int dishId)
     {
-        var cart = await GetOrCreateCartAsync();
+        using var context = await _factory.CreateDbContextAsync();
+        var cart = await GetOrCreateCartAsync(context);
         var item = cart.CartItems.FirstOrDefault(item => item.IdDish == dishId);
 
         if (item != null)
         {
-            _context.CartItems.Remove(item);
+            context.CartItems.Remove(item);
             cart.UpdatedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
             CartChanged?.Invoke();
         }
     }
@@ -134,70 +133,42 @@ public class CartService
             return;
         }
 
-        var cart = await GetOrCreateCartAsync();
+        using var context = await _factory.CreateDbContextAsync();
+        var cart = await GetOrCreateCartAsync(context);
         var item = cart.CartItems.FirstOrDefault(item => item.IdDish == dishId);
 
         if (item != null)
         {
             item.Quantity = newQuantity;
             cart.UpdatedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
             CartChanged?.Invoke();
         }
     }
 
     public async Task ClearCartAsync()
     {
-        var cart = await GetOrCreateCartAsync();
+        using var context = await _factory.CreateDbContextAsync();
+        var cart = await GetOrCreateCartAsync(context);
 
-        _context.CartItems.RemoveRange(cart.CartItems);
+        context.CartItems.RemoveRange(cart.CartItems);
         cart.UpdatedAt = DateTime.Now;
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
         CartChanged?.Invoke();
     }
 
     public async Task<int> GetQuantityAsync(int dishId)
     {
-        var cart = await GetOrCreateCartAsync();
+        using var context = await _factory.CreateDbContextAsync();
+        var cart = await GetOrCreateCartAsync(context);
         var item = cart.CartItems.FirstOrDefault(item => item.IdDish == dishId);
         return item?.Quantity ?? 0;
     }
 
     public async Task<bool> IsInCartAsync(int dishId)
     {
-        var cart = await GetOrCreateCartAsync();
+        using var context = await _factory.CreateDbContextAsync();
+        var cart = await GetOrCreateCartAsync(context);
         return cart.CartItems.Any(item => item.IdDish == dishId);
     }
-
-    // Синхронные обёртки для использования в Razor компонентах
-    public void AddToCart(Dish dish, int quantity = 1)
-    {
-        AddToCartAsync(dish, quantity).GetAwaiter().GetResult();
-    }
-
-    public void RemoveFromCart(int dishId)
-    {
-        RemoveFromCartAsync(dishId).GetAwaiter().GetResult();
-    }
-
-    public void UpdateQuantity(int dishId, int newQuantity)
-    {
-        UpdateQuantityAsync(dishId, newQuantity).GetAwaiter().GetResult();
-    }
-
-    public void ClearCart()
-    {
-        ClearCartAsync().GetAwaiter().GetResult();
-    }
-
-    public int GetQuantity(int dishId)
-    {
-        return GetQuantityAsync(dishId).GetAwaiter().GetResult();
-    }
-
-    public bool IsInCart(int dishId)
-    {
-        return IsInCartAsync(dishId).GetAwaiter().GetResult();
-    }
 }
-

@@ -1,47 +1,52 @@
-﻿using Restaurant_site.Data;
+using Restaurant_site.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Restaurant_site.Services
 {
     public class RestaurantService : IRestaurantService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IDbContextFactory<ApplicationDbContext> _factory;
 
-        public RestaurantService(ApplicationDbContext context)
+        public RestaurantService(IDbContextFactory<ApplicationDbContext> factory)
         {
-            _context = context;
+            _factory = factory;
         }
 
         public async Task<List<Dish>> GetDishesAsync()
         {
-            return await _context.Dishes
+            using var context = await _factory.CreateDbContextAsync();
+            return await context.Dishes
                 .Include(d => d.DishType)
                 .ToListAsync();
         }
 
         public async Task<List<Table>> GetTablesAsync()
         {
-            return await _context.Tables
+            using var context = await _factory.CreateDbContextAsync();
+            return await context.Tables
                 .Include(t => t.TableType)
                 .ToListAsync();
         }
 
         public async Task<List<TableType>> GetTableTypesAsync()
         {
-            return await _context.TableTypes.ToListAsync();
+            using var context = await _factory.CreateDbContextAsync();
+            return await context.TableTypes.ToListAsync();
         }
 
         public async Task<List<DishType>> GetDishTypesAsync()
         {
-            return await _context.DishTypes.ToListAsync();
+            using var context = await _factory.CreateDbContextAsync();
+            return await context.DishTypes.ToListAsync();
         }
 
         public async Task<bool> CreateReservationAsync(Reservation reservation)
         {
             try
             {
-                _context.Reservations.Add(reservation);
-                await _context.SaveChangesAsync();
+                using var context = await _factory.CreateDbContextAsync();
+                context.Reservations.Add(reservation);
+                await context.SaveChangesAsync();
                 return true;
             }
             catch
@@ -54,8 +59,9 @@ namespace Restaurant_site.Services
         {
             try
             {
-                _context.Orders.Add(order);
-                await _context.SaveChangesAsync();
+                using var context = await _factory.CreateDbContextAsync();
+                context.Orders.Add(order);
+                await context.SaveChangesAsync();
                 return true;
             }
             catch
@@ -66,14 +72,16 @@ namespace Restaurant_site.Services
 
         public async Task<User?> GetUserByPhoneAsync(string phoneNum)
         {
-            return await _context.Users
+            using var context = await _factory.CreateDbContextAsync();
+            return await context.Users
                 .FirstOrDefaultAsync(u => u.PhoneNum == phoneNum);
         }
 
         public async Task<User> CreateUserAsync(User user)
         {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            using var context = await _factory.CreateDbContextAsync();
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
             return user;
         }
 
@@ -83,7 +91,8 @@ namespace Restaurant_site.Services
             var startTime = date.AddHours(-2);
             var endTime = date.AddHours(2);
 
-            var existingReservation = await _context.Reservations
+            using var context = await _factory.CreateDbContextAsync();
+            var existingReservation = await context.Reservations
                 .AnyAsync(r => r.IdTable == tableId &&
                               r.Date >= startTime &&
                               r.Date <= endTime);
@@ -93,7 +102,8 @@ namespace Restaurant_site.Services
 
         public async Task<List<Reservation>> GetAllReservationsAsync()
         {
-            return await _context.Reservations
+            using var context = await _factory.CreateDbContextAsync();
+            return await context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Table)
                 .ThenInclude(t => t.TableType)

@@ -1,6 +1,7 @@
 @using Restaurant_site.Services
 @inject CartService CartService
 @inject NavigationManager NavigationManager
+@implements IDisposable
 
 @if (IsOpen)
 {
@@ -12,7 +13,7 @@
             </div>
 
             <div class="cart-modal-body">
-                @if (CartService.Items.Count == 0)
+                @if (cartItems.Count == 0)
                 {
                     <div class="cart-empty">
                         <p>Корзина пуста</p>
@@ -22,7 +23,7 @@
                 else
                 {
                     <div class="cart-items-list">
-                        @foreach (var item in CartService.Items)
+                        @foreach (var item in cartItems)
                         {
                             <div class="cart-item-row">
                                 <div class="cart-item-info">
@@ -50,25 +51,25 @@
                     <div class="cart-summary">
                         <div class="cart-total-row">
                             <span class="cart-total-label">Всего товаров:</span>
-                            <span class="cart-total-value">@CartService.TotalItems шт.</span>
+                            <span class="cart-total-value">@totalItems шт.</span>
                         </div>
                         <div class="cart-total-row cart-total-price">
                             <span class="cart-total-label">Итого:</span>
-                            <span class="cart-total-value">@CartService.TotalPrice ₽</span>
+                            <span class="cart-total-value">@totalPrice ₽</span>
                         </div>
-                        @if (!CartService.IsMinOrderAmountMet)
+                        @if (!isMinOrderAmountMet)
                         {
                             <div class="cart-min-order-warning">
                                 Минимальная сумма заказа: @CartService.MinOrderAmount ₽
                                 <br/>
-                                Добавьте еще на @(CartService.MinOrderAmount - CartService.TotalPrice) ₽
+                                Добавьте еще на @(CartService.MinOrderAmount - totalPrice) ₽
                             </div>
                         }
                     </div>
                 }
             </div>
 
-            @if (CartService.Items.Count > 0)
+            @if (cartItems.Count > 0)
             {
                 <div class="cart-modal-footer">
                     <button class="cart-continue-shopping" @onclick="Close">
@@ -76,7 +77,7 @@
                     </button>
                     <button class="cart-checkout-button"
                             @onclick="GoToCheckout"
-                            disabled="@(!CartService.IsMinOrderAmountMet)">
+                            disabled="@(!isMinOrderAmountMet)">
                         Перейти к оформлению
                     </button>
                 </div>
@@ -92,14 +93,32 @@
     [Parameter]
     public EventCallback<bool> IsOpenChanged { get; set; }
 
-    protected override void OnInitialized()
+    private List<CartItem> cartItems = new();
+    private int totalItems = 0;
+    private decimal totalPrice = 0;
+    private bool isMinOrderAmountMet = false;
+
+    protected override async Task OnInitializedAsync()
     {
         CartService.CartChanged += OnCartChanged;
+        await UpdateCartStateAsync();
     }
 
     private void OnCartChanged()
     {
-        StateHasChanged();
+         _ = InvokeAsync(async () =>
+        {
+            await UpdateCartStateAsync();
+            StateHasChanged();
+        });
+    }
+
+    private async Task UpdateCartStateAsync()
+    {
+        cartItems = await CartService.GetItemsAsync();
+        totalItems = await CartService.GetTotalItemsAsync();
+        totalPrice = await CartService.GetTotalPriceAsync();
+        isMinOrderAmountMet = await CartService.IsMinOrderAmountMetAsync();
     }
 
     private async Task Close()
@@ -108,21 +127,21 @@
         await IsOpenChanged.InvokeAsync(false);
     }
 
-    private void IncreaseQuantity(int dishId)
+    private async Task IncreaseQuantity(int dishId)
     {
-        var currentQuantity = CartService.GetQuantity(dishId);
-        CartService.UpdateQuantity(dishId, currentQuantity + 1);
+        var currentQuantity = await CartService.GetQuantityAsync(dishId);
+        await CartService.UpdateQuantityAsync(dishId, currentQuantity + 1);
     }
 
-    private void DecreaseQuantity(int dishId)
+    private async Task DecreaseQuantity(int dishId)
     {
-        var currentQuantity = CartService.GetQuantity(dishId);
-        CartService.UpdateQuantity(dishId, currentQuantity - 1);
+        var currentQuantity = await CartService.GetQuantityAsync(dishId);
+        await CartService.UpdateQuantityAsync(dishId, currentQuantity - 1);
     }
 
-    private void RemoveItem(int dishId)
+    private async Task RemoveItem(int dishId)
     {
-        CartService.RemoveFromCart(dishId);
+        await CartService.RemoveFromCartAsync(dishId);
     }
 
     private async Task GoToCheckout()
