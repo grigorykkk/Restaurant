@@ -3,6 +3,7 @@
 @using Restaurant_site.Services
 @inject MenuService MenuService
 @inject CartService CartService
+@implements IDisposable
 
 <HomeButton />
 
@@ -38,11 +39,11 @@
                                 </div>
                                 <p class="menu-description">@dish.Description</p>
                                 <div class="menu-item-actions">
-                                    @if (CartService.IsInCart(dish.IdDish))
+                                    @if (cartQuantities.ContainsKey(dish.IdDish) && cartQuantities[dish.IdDish] > 0)
                                     {
                                         <div class="quantity-controls">
                                             <button class="quantity-button" @onclick="() => DecreaseQuantity(dish)">−</button>
-                                            <span class="quantity-display">@CartService.GetQuantity(dish.IdDish)</span>
+                                            <span class="quantity-display">@cartQuantities[dish.IdDish]</span>
                                             <button class="quantity-button" @onclick="() => IncreaseQuantity(dish)">+</button>
                                         </div>
                                     }
@@ -70,17 +71,29 @@
     private int selectedCategoryId = 0;
     private List<DishType> dishTypes = new();
     private List<Dish> dishes = new();
+    private Dictionary<int, int> cartQuantities = new();
 
     protected override async Task OnInitializedAsync()
     {
         dishTypes = await MenuService.GetAllDishTypesAsync();
         dishes = await MenuService.GetAllDishesAsync();
         CartService.CartChanged += OnCartChanged;
+        await UpdateCartQuantities();
     }
 
     private void OnCartChanged()
     {
-        StateHasChanged();
+        _ = InvokeAsync(async () =>
+        {
+            await UpdateCartQuantities();
+            StateHasChanged();
+        });
+    }
+
+    private async Task UpdateCartQuantities()
+    {
+        var items = await CartService.GetItemsAsync();
+        cartQuantities = items.ToDictionary(i => i.IdDish, i => i.Quantity);
     }
 
     private async Task FilterMenu(int categoryId)
@@ -89,20 +102,22 @@
         dishes = await MenuService.GetDishesByCategoryAsync(categoryId);
     }
 
-    private void AddToCart(Dish dish)
+    private async Task AddToCart(Dish dish)
     {
-        CartService.AddToCart(dish);
+        await CartService.AddToCartAsync(dish);
     }
 
-    private void IncreaseQuantity(Dish dish)
+    private async Task IncreaseQuantity(Dish dish)
     {
-        CartService.AddToCart(dish, 1);
+        await CartService.AddToCartAsync(dish, 1);
     }
 
-    private void DecreaseQuantity(Dish dish)
+    private async Task DecreaseQuantity(Dish dish)
     {
-        var currentQuantity = CartService.GetQuantity(dish.IdDish);
-        CartService.UpdateQuantity(dish.IdDish, currentQuantity - 1);
+        if (cartQuantities.TryGetValue(dish.IdDish, out int quantity))
+        {
+            await CartService.UpdateQuantityAsync(dish.IdDish, quantity - 1);
+        }
     }
 
     public void Dispose()

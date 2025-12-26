@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @using Restaurant_site.Components.Cart
 
 <!Doctype html>
@@ -12,6 +12,7 @@
     <title>Restaurant</title>
 </head>
 <body>
+    <SessionInitializer />
     <LoadingScreen />
     @Body
     <CartButton />

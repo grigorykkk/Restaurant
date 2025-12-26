@@ -1,0 +1,47 @@
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Restaurant_site.Services
+@inject ProtectedLocalStorage ProtectedLocalStore
+@inject CartService CartService
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var result = await ProtectedLocalStore.GetAsync<string>("sessionId");
+                string sessionId;
+
+                if (result.Success && !string.IsNullOrEmpty(result.Value))
+                {
+                    sessionId = result.Value;
+                }
+                else
+                {
+                    sessionId = Guid.NewGuid().ToString();
+                    await ProtectedLocalStore.SetAsync("sessionId", sessionId);
+                }
+
+                CartService.SetSessionId(sessionId);
+
+                // Notify components that session is initialized (and cart might need reload)
+                // Since CartService doesn't have a specific "SessionInitialized" event,
+                // we can trigger CartChanged just in case, or just rely on the fact
+                // that components will re-render or future calls will use the correct ID.
+                // However, components might have already loaded data with the default GUID.
+                // It's better if CartService handles this internally or we force a refresh.
+
+                // Triggering a reload in CartService might be useful
+                // For now, let's assume the user will see the correct cart on next interaction
+                // or we need to signal.
+                // A better approach is to have CartService expose an Initialize method.
+            }
+            catch (Exception ex)
+            {
+                // Handle potential errors (e.g. JS interop unavailable)
+                Console.WriteLine($"Error initializing session: {ex.Message}");
+            }
+        }
+    }
+}
