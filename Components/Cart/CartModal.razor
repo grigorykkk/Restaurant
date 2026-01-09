@@ -1,6 +1,7 @@
 @using Restaurant_site.Services
 @inject CartService CartService
 @inject NavigationManager NavigationManager
+@implements IDisposable
 
 @if (IsOpen)
 {
